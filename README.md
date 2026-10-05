@@ -17,7 +17,11 @@ Repository containing study notes, question banks, university exam preparation m
 ├── UNIT - 2/
 │   └── UNIT 2.pdf                      # Unit 2 reference notes & materials
 ├── UNIT - 3/
-│   └── questions.md                    # Unit 3 question bank
+│   ├── questions.md                    # Unit 3 question bank
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 27 Mermaid diagrams
+├── .agents/rules/
+│   └── exam_answers_style.md           # 16-mark long answers academic style rule
+├── AGENTS.md                           # Global agent behavior & repository standards
 └── README.md
 ```
 
@@ -46,3 +50,23 @@ Available in: [UNIT - 1/long_questions_answers.md](UNIT%20-%201/long_questions_a
 3. **Switching Techniques**: Space/Time division circuit switching, message switching store-and-forward, datagram vs. virtual circuit packet switching, and mathematical delay pipelining proofs.
 4. **Network Topologies**: Physical vs. logical topologies, Mesh, Star, Bus, Ring, Tree, formulas ($N(N-1)/2$), CSMA/CD, and token passing dynamics.
 5. **Transmission Media**: Nyquist and Shannon channel capacity theorems, twisted pair physics & categories (Cat 3 to Cat 8), coaxial types, fiber optics (TIR, SMF vs. MMF), and wireless electromagnetic propagation (ground wave, sky wave, line-of-sight).
+
+---
+
+## 📖 Unit 3 Coverage (Network Layer & Routing)
+
+### 📑 16-Mark Long Questions Master Guide
+Available in: [UNIT - 3/long_questions_answers.md](UNIT%20-%203/long_questions_answers.md)
+1. **Duties of the Network Layer**: Host-to-host delivery, packetizing, hierarchical logical addressing, routing vs. forwarding, fragmentation/reassembly, ICMP error reporting, and QoS/traffic shaping.
+2. **Different Address Classes (Class A, B, C, D, E)**: Dotted-decimal notation, leading-bit rules, network/host splits, usable hosts, private IP blocks (RFC 1918), reserved blocks (loopback, APIPA, broadcast), and CIDR evolution.
+3. **Routing Techniques**:
+   - *Distance Vector Routing*: Bellman-Ford algorithm, convergence walkthrough, Count-to-Infinity problem, Split Horizon, Poison Reverse, and hold-down timers.
+   - *Link State Routing*: Dijkstra's algorithm, shortest path tree (SPT), reliable flooding of LSPs, and LSDB synchronization.
+   - *Spanning Tree Protocol (IEEE 802.1D)*: Bridge loop disasters (broadcast storms, MAC table instability), root bridge election, port states (blocking $\to$ forwarding).
+4. **Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA)**: Physical reasons why CSMA/CD fails in wireless, Hidden/Exposed terminal problems, tiered IFS (SIFS, PIFS, DIFS, EIFS), randomized exponential backoff ($CW$), 4-way RTS/CTS handshake, and NAV virtual carrier sensing.
+5. **Internet Protocol Version 4 (IPv4)**: Complete 32-bit header field breakdown (Version, IHL, DSCP, ECN, Total Length, ID, Flags, Offset, TTL, Protocol, Checksum), mathematical MTU fragmentation walkthrough, subnetting formulas ($2^s$, $2^h - 2$), and IPv4 vs. IPv6 comparison.
+6. **Routing Protocols (OSPF, RIP, and BGP)**:
+   - *RIP (v1/v2)*: Hop count metric, 15-hop limit, 30s updates over UDP 520, classful vs. classless.
+   - *OSPF (v2/v3)*: Inverse bandwidth cost, 2-tier area hierarchy (Backbone Area 0, ABR, ASBR), 5 packet types, DR/BDR election, Dijkstra SPF over IP protocol 89.
+   - *BGP-4*: Path Vector EGP, AS-PATH loop prevention, policy routing attributes (NEXT_HOP, LOCAL_PREF, MED), reliable peering over TCP 179.
+
