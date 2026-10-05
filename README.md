@@ -15,10 +15,13 @@ Repository containing study notes, question banks, university exam preparation m
 │   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 29 Mermaid diagrams
 │   └── UNIT 1.pdf                      # Lecture slides and unit reference notes
 ├── UNIT - 2/
-│   └── UNIT 2.pdf                      # Unit 2 reference notes & materials
+│   ├── question.md                     # Unit 2 question bank
+│   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 22 Mermaid diagrams
+│   ├── UNIT 2.pdf                      # Unit 2 reference notes
+│   └── UNIT 2 NOTES.pdf                # Supplementary unit notes
 ├── UNIT - 3/
 │   ├── questions.md                    # Unit 3 question bank
-│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 27 Mermaid diagrams
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 47 Mermaid diagrams
 ├── .agents/rules/
 │   └── exam_answers_style.md           # 16-mark long answers academic style rule
 ├── AGENTS.md                           # Global agent behavior & repository standards
@@ -50,6 +53,19 @@ Available in: [UNIT - 1/long_questions_answers.md](UNIT%20-%201/long_questions_a
 3. **Switching Techniques**: Space/Time division circuit switching, message switching store-and-forward, datagram vs. virtual circuit packet switching, and mathematical delay pipelining proofs.
 4. **Network Topologies**: Physical vs. logical topologies, Mesh, Star, Bus, Ring, Tree, formulas ($N(N-1)/2$), CSMA/CD, and token passing dynamics.
 5. **Transmission Media**: Nyquist and Shannon channel capacity theorems, twisted pair physics & categories (Cat 3 to Cat 8), coaxial types, fiber optics (TIR, SMF vs. MMF), and wireless electromagnetic propagation (ground wave, sky wave, line-of-sight).
+
+---
+
+## 📖 Unit 2 Coverage (Data Link Layer & MAC)
+
+### 📑 16-Mark Long Questions Master Guide
+Available in: [UNIT - 2/long_questions_answers.md](UNIT%20-%202/long_questions_answers.md)
+1. **Duties of the Data Link Layer**: Hop-to-hop frame delivery; LLC (IEEE 802.2) vs. MAC (IEEE 802.3/802.11) sublayers; Framing methods (Byte Stuffing with ESC flags, Bit Stuffing with `01111110` flag delimiter); 48-bit physical MAC addressing; flow control & error control (ARQ); channel access arbitration.
+2. **Unicast, Multicast, and Broadcast Transmission Modes**: Detailed examination of One-to-One, One-to-All (Limited `255.255.255.255` vs. Directed broadcast, broadcast storms), One-to-Many (Class D multicast, the 32:1 Ethernet MAC mapping ambiguity `01:00:5E`, IGMP), and One-to-Nearest (Anycast BGP routing).
+3. **Address Resolution Protocol (ARP)**: Bridging logical IP and physical MAC addresses; complete 28-byte RFC 826 packet format; broadcast Request & unicast Reply; ARP cache table aging timers; ARP cache poisoning attacks; Gratuitous ARP and Proxy ARP.
+4. **Reverse Address Resolution Protocol (RARP)**: Diskless workstation bootstrap dilemma; RFC 903 packet structure and EtherType `0x8035`; broadcast Request & unicast Reply; architectural flaws (Layer 2 non-routable, IP only, static allocation); evolution into BOOTP and DHCP.
+5. **Error Detection and Correction**: Single-bit vs. burst errors; Hamming distance bounds ($d_{\text{min}} \ge s+1$ for detection, $d_{\text{min}} \ge 2t+1$ for correction); Simple (1D) vs. Two-Dimensional (2D) Parity; Internet Checksum (1's complement math); Cyclic Redundancy Check (CRC Modulo-2 polynomial division walkthrough); Hamming Code ($2^r \ge m + r + 1$) complete encoding, error injection, and syndrome correction trace.
+
 
 ---
 
