@@ -81,5 +81,14 @@ Available in: [UNIT - 3/long_questions_answers.md](UNIT%20-%203/long_questions_a
    - Traffic Shaping: **Leaky Bucket** (FIFO queue, constant output rate) vs. **Token Bucket** (token accumulation, controlled bursts).
    - Mathematical proof of Maximum Burst Duration ($T = \frac{C}{M - r}$) and burst volume with numerical calculations.
    - Closed-Loop feedback: Hop-by-Hop Backpressure, Choke Packets, and Explicit Congestion Notification (ECN - RFC 3168 with RED marking and TCP ECE/CWR flags).
+9. **Network Layer Protocols (Overview Suite)**:
+   - *IPv6 (RFC 8200)*: 128-bit addresses, colon-hexadecimal notation, fixed 40-byte base header, extension headers, and transition mechanisms (Dual Stack, Tunneling, NAT64).
+   - *ICMP (RFC 792)*: Diagnostic error reporting (Destination Unreachable, Time Exceeded, Parameter Problem) and query mechanisms (`ping` Echo Request/Reply and `traceroute` TTL expiration).
+   - *ARP (RFC 826)*: Dynamic Layer 3 Logical IP to Layer 2 Physical MAC resolution, broadcast Request, unicast Reply, ARP cache table, Gratuitous ARP, and Proxy ARP.
+   - *RARP (RFC 903)*: Reverse resolution (Physical MAC to Logical IP) for diskless workstations, broadcast Request, unicast Reply, and deprecation reasons.
+   - *IGMP (RFC 2236)*: Managing multicast group memberships on local subnets, General Query (`224.0.0.1`), Membership Report, Leave Group (`224.0.0.2`), and switch IGMP Snooping.
+   - *BGP (RFC 4271)*: Path Vector inter-domain routing between Autonomous Systems, AS-PATH loop immunity, peering over TCP Port 179, and eBGP vs. iBGP.
+   - Master Comparison Matrix: 10-parameter evaluation across all 6 companion protocols.
+
 
 

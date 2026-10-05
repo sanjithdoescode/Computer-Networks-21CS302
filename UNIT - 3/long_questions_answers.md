@@ -58,6 +58,15 @@
    - 8.4 Traffic Shaping (Open-Loop): The Token Bucket Algorithm & Mathematical Proof
    - 8.5 Closed-Loop Congestion Control: Backpressure, Choke Packets, and ECN
    - 8.6 Master Comparison Matrix of Congestion Control Techniques
+9. [Question 9: Network Layer Protocols (Overview Suite)](#question-9-network-layer-protocols-overview-suite)
+   - 9.1 Architectural Overview of the TCP/IP Network Layer Suite
+   - 9.2 IPv6 (Internet Protocol Version 6)
+   - 9.3 ICMP (Internet Control Message Protocol)
+   - 9.4 ARP (Address Resolution Protocol)
+   - 9.5 RARP (Reverse Address Resolution Protocol)
+   - 9.6 IGMP (Internet Group Management Protocol)
+   - 9.7 BGP (Border Gateway Protocol)
+   - 9.8 Master Comparison Matrix of Network Layer Protocols
 
 ---
 
@@ -1742,3 +1751,344 @@ sequenceDiagram
 | **Packet Drop Risk** | Drops on bucket full | Drops only on queue full | Zero drops (flow back) | Packets dropped on queue full | Zero drops (marks packets before drop)|
 | **Feedback Latency** | None (Static Policy) | None (Static Policy) | Immediate per hop | Round-trip propagation | Full RTT (data forward + ACK back) |
 | **Standard Tech** | ATM traffic shaping | Cisco IOS rate limiting | X.25, Virtual Circuits | ICMP Source Quench (Legacy) | RFC 3168 (Modern Internet TCP/IP) |
+
+
+---
+
+# Question 9: Network Layer Protocols (Overview Suite)
+
+## 9.1 Architectural Overview of the TCP/IP Network Layer Suite
+
+While the **Internet Protocol (IPv4 / IPv6)** serves as the transmission backbone of the Network Layer, it cannot function in isolation. The Network Layer is an integrated ecosystem of complementary protocols designed to handle physical-to-logical address translation, diagnostic error reporting, multicast group management, and inter-domain routing.
+
+```mermaid
+flowchart TD
+    subgraph AppTrans["Transport & Application Layers"]
+        TCP_UDP["TCP / UDP Transport Streams"]
+    end
+
+    subgraph NetLayerSuite["TCP/IP Network Layer Protocol Suite"]
+        direction TB
+        
+        IP_CORE["IP Core Protocols<br/>- IPv4 (RFC 791)<br/>- IPv6 (RFC 8200)"]
+        
+        subgraph Diagnostics["Control & Diagnostics"]
+            ICMP["ICMPv4 / ICMPv6<br/>(Error Reporting & Ping / Traceroute)"]
+        end
+        
+        subgraph Multicast["Multicast Management"]
+            IGMP["IGMP (v1 / v2 / v3)<br/>(Local Group Membership)"]
+        end
+        
+        subgraph Resolution["Hardware Address Resolution"]
+            ARP["ARP: Logical IP -> Physical MAC"]
+            RARP["RARP: Physical MAC -> Logical IP"]
+        end
+        
+        subgraph GlobalRouting["Inter-Domain Routing"]
+            BGP["BGP-4 (Path Vector EGP)<br/>(Inter-AS Internet Backbone Routing)"]
+        end
+        
+        IP_CORE --- ICMP
+        IP_CORE --- IGMP
+        IP_CORE --- ARP
+        IP_CORE --- RARP
+        IP_CORE --- BGP
+    end
+
+    subgraph DataLink["Data Link Layer (Layer 2)"]
+        MAC_LAYER["Ethernet / Wi-Fi Frames (MAC Addressing)"]
+    end
+
+    TCP_UDP --> IP_CORE
+    IP_CORE --> MAC_LAYER
+    ARP -.-> MAC_LAYER
+    RARP -.-> MAC_LAYER
+```
+
+---
+
+## 9.2 IPv6 (Internet Protocol Version 6)
+
+### Motivation & Rationale
+Standardized by the IETF via **RFC 8200**, **IPv6** was designed to replace IPv4 due to the imminent exhaustion of IPv4's 32-bit address space. Beyond providing an astronomical address pool, IPv6 streamlined router processing by simplifying header structures and eliminating router-level fragmentation.
+
+```mermaid
+flowchart TD
+    subgraph IPv6Enhancements["Key IPv6 Architectural Advantages"]
+        E1["1. 128-Bit Address Space (3.4 x 10^38 Addresses)"]
+        E2["2. Simplified Fixed 40-Byte Base Header (Faster Router Processing)"]
+        E3["3. Daisy-Chained Extension Headers (Flexible Options)"]
+        E4["4. Stateless Address Autoconfiguration (SLAAC)"]
+        E5["5. Native Mandatory IPsec Security"]
+        E6["6. Elimination of Broadcast (Replaced by Multicast & Anycast)"]
+    end
+```
+
+### 1. 128-Bit Address Representation
+- IPv6 addresses are 128 bits in length (yielding $2^{128} \approx 3.4 \times 10^{38}$ distinct addresses).
+- Expressed in **Colon-Hexadecimal Notation** as eight 16-bit blocks separated by colons:
+  $$\text{2001:0db8:85a3:0000:0000:8a2e:0370:7334}$$
+- **Compression Rules**:
+  1. *Leading Zero Suppression*: Leading zeroes in any 16-bit hexadecimal block may be omitted: `0000` becomes `0`, `0db8` becomes `db8`.
+  2. *Double-Colon Compaction (`::`)*: A single contiguous run of consecutive blocks of all zeroes can be replaced by `::` (allowed only once per address to maintain uniqueness):
+     $$\text{2001:0db8:0000:0000:0000:0000:0000:0001} \implies \mathbf{2001:db8::1}$$
+
+### 2. Fixed 40-Byte Header Format
+Unlike IPv4's variable-length header (20–60 bytes), the IPv6 base header is strictly fixed at **40 bytes**:
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Version| Traffic Class |           Flow Label                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Payload Length        |  Next Header  |   Hop Limit   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                         Source Address                        +
+|                           (128 bits)                          |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                      Destination Address                      +
+|                           (128 bits)                          |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+- **Version (4 bits)**: Fixed to `0110` (binary 6).
+- **Traffic Class (8 bits)**: Equivalent to IPv4 DSCP/ECN for QoS packet classification.
+- **Flow Label (20 bits)**: Identifies packets belonging to a specific real-time flow (e.g., VoIP/streaming), allowing routers to forward packets along the same path without re-evaluating routing tables.
+- **Payload Length (16 bits)**: Size of the payload following the 40-byte base header (including any extension headers).
+- **Next Header (8 bits)**: Replaces IPv4's Protocol field. Specifies either the transport layer protocol (TCP=6, UDP=17) or the type of the immediate following **Extension Header**.
+- **Hop Limit (8 bits)**: Replaces IPv4's TTL; decremented by 1 at each router hop. Packet is discarded when it reaches 0.
+- **Source & Destination Addresses (128 bits each)**: 16-byte logical endpoints.
+- *Key Changes*: The **Header Checksum was completely removed** (relying on Layer 2 and Layer 4 checksums to increase forwarding speeds), and **intermediate routers never fragment packets** (fragmentation is handled exclusively by the sending host using Path MTU Discovery).
+
+### 3. Transition Mechanisms from IPv4 to IPv6
+- **Dual-Stack**: Network interfaces simultaneously run both IPv4 and IPv6 protocol stacks.
+- **Tunneling (6to4 / 4in6)**: Encapsulating IPv6 packets inside standard IPv4 headers to traverse legacy IPv4 routing backbones.
+- **Header Translation (NAT64 / DNS64)**: Translating IPv6 packet headers directly into IPv4 headers for communication between IPv6-only and IPv4-only hosts.
+
+---
+
+## 9.3 ICMP (Internet Control Message Protocol)
+
+Because IP is an unreliable, connectionless "best-effort" protocol, it lacks built-in mechanisms to report transmission failures or verify network reachability. The **Internet Control Message Protocol (ICMPv4 - RFC 792 / ICMPv6 - RFC 4443)** operates as an integral diagnostic companion to IP.
+
+```mermaid
+flowchart TD
+    subgraph ICMP_Roles["Core Roles of ICMP"]
+        R1["1. Error Reporting (Destination Unreachable, Time Exceeded, Parameter Problem)"]
+        R2["2. Diagnostic Queries (Echo Request & Reply -> Ping Utility)"]
+        R3["3. Path Discovery (TTL Expiration Mechanism -> Traceroute Utility)"]
+    end
+```
+
+### 1. General ICMP Message Format
+ICMP messages are encapsulated directly inside standard IP datagrams ($\text{Protocol} = 1$ in IPv4):
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Type      |     Code      |          Checksum             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                 Rest of the Header (Variable)                 |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       Data: Original IP Header + First 8 Bytes of Payload     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+- **Type (8 bits)**: Identifies the high-level category of error or query.
+- **Code (8 bits)**: Sub-category providing detailed technical context for the Type.
+- **Checksum (16 bits)**: Detects corruption in the ICMP message.
+- **Data Field**: In error reporting, ICMP copies the **original IP header plus the first 8 bytes of the offending datagram's transport payload** (containing TCP/UDP port numbers), allowing the sending host to identify which application process generated the failed packet.
+
+### 2. Primary Error Reporting Messages
+- **Type 3 — Destination Unreachable**:
+  - Code `0`: Network Unreachable (routing table failure).
+  - Code `1`: Host Unreachable (destination host offline or ARP failed).
+  - Code `3`: Port Unreachable (target UDP service port not listening).
+  - Code `4`: Fragmentation Needed but DF bit was set (`1`).
+- **Type 11 — Time Exceeded**:
+  - Code `0`: Time-to-Live (TTL) decremented to 0 in transit.
+  - Code `1`: Fragment reassembly timer expired before all fragments arrived.
+- **Type 12 — Parameter Problem**: Ambiguous or corrupt IP header field.
+- **Type 5 — Redirection**: Instructs a host to update its routing table to use a superior local first-hop router.
+
+### 3. Diagnostic Utilities: Ping and Traceroute
+- **Ping (`ping <host>`)**:
+  Transmits an ICMP **Type 8 (Echo Request)**. The receiving host processes the message and returns an ICMP **Type 0 (Echo Reply)**. Calculates Round-Trip Time (RTT) and packet loss percentage.
+- **Traceroute (`traceroute <host>`)**:
+  Discovers all intermediate router hops along an end-to-end path:
+  1. Transmits an IP packet with $\text{TTL} = 1$. The first router decrements TTL to 0, drops the packet, and returns an ICMP **Type 11 (Time Exceeded)**. Traceroute records the router's IP and RTT.
+  2. Transmits an IP packet with $\text{TTL} = 2$, discovering the second hop.
+  3. Increments TTL sequentially ($3, 4, \dots$) until the packet reaches the destination, which returns an ICMP **Type 3 Code 3 (Port Unreachable)** or Echo Reply, completing the path trace.
+
+---
+
+## 9.4 ARP (Address Resolution Protocol)
+
+### Purpose & Problem Statement
+On a local area network (such as Ethernet or Wi-Fi), hosts forward data packets encapsulated within Layer 2 frames. However, network-layer software only knows the **32-bit Logical IP Address** of the destination. Hardware network cards (NICs) ignore IP addresses and require a **48-bit Physical MAC Address** to deliver a frame.
+
+The **Address Resolution Protocol (ARP - RFC 826)** bridges this gap by dynamically resolving a known IP address to its corresponding physical MAC address on the local link.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant HostA as Host A (192.168.1.10)
+    participant Switch as Layer 2 Switch
+    participant HostB as Host B (192.168.1.20)
+    participant HostC as Host C (192.168.1.30)
+    
+    Note over HostA: Needs to send to 192.168.1.20.<br/>Checks local ARP Cache: Miss!
+    HostA->>Switch: 1. ARP Request (Broadcast to FF:FF:FF:FF:FF:FF)<br/>"Who has 192.168.1.20? Tell 192.168.1.10!"
+    Switch->>HostB: Floods Broadcast to Host B
+    Switch->>HostC: Floods Broadcast to Host C
+    Note over HostC: Not my IP! Discards packet.
+    Note over HostB: Matches my IP! Updates ARP cache with Host A's MAC.
+    HostB-->>HostA: 2. ARP Reply (Unicast to Host A's MAC)<br/>"I have 192.168.1.20! My MAC is 00:BB:CC:DD:EE:FF"
+    Note over HostA: Updates local ARP Cache!<br/>Transmits pending Data Frame via Unicast.
+```
+
+### Operational Cycle: Request and Reply
+1. **ARP Request (Broadcast)**:
+   - Host A packages an ARP Request frame: $\text{Target IP} = 192.168.1.20$, $\text{Target MAC} = \text{00:00:00:00:00:00}$.
+   - Encapsulated in an Ethernet frame with **Destination MAC = `FF:FF:FF:FF:FF:FF` (Broadcast)**.
+   - Every host on the local physical network receives and inspects the packet. Non-target machines discard it silently.
+2. **ARP Reply (Unicast)**:
+   - Target Host B updates its ARP cache with Host A's IP-to-MAC mapping.
+   - Host B generates an ARP Reply containing its physical MAC address, transmitting it as a **Unicast frame** directly back to Host A's MAC address.
+3. **ARP Cache Table**:
+   - Both hosts cache the binding in memory (e.g., `192.168.1.20` $\longleftrightarrow$ `00:BB:CC:DD:EE:FF`).
+   - Dynamic entries expire after a cache timeout (typically 10 to 20 minutes) to account for replaced NICs or reassigned IP addresses.
+
+### Specialized ARP Variants
+- **Gratuitous ARP**: A host broadcasts an ARP request for its **own IP address**. Used during boot to detect duplicate IP conflicts (if any host replies, the IP is already in use) and to update ARP tables on neighboring switches.
+- **Proxy ARP**: A router responds to an ARP request on behalf of a host on an adjacent subnet, enabling transparent communication without requiring the sender to reconfigure subnet masks.
+
+---
+
+## 9.5 RARP (Reverse Address Resolution Protocol)
+
+### Purpose & Historical Context
+While ARP resolves an IP address to a MAC address, the **Reverse Address Resolution Protocol (RARP - RFC 903)** performed the exact inverse operation: mapping a known **Physical MAC Address to an unknown Logical IP Address**.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as Diskless Workstation (MAC: 00:11:22:33:44:55)
+    participant Switch as Layer 2 Switch
+    participant Server as RARP Server (Maintains MAC <-> IP Table)
+    
+    Note over Client: Machine boots from ROM.<br/>Knows its burned-in NIC MAC, but has no local disk or IP!
+    Client->>Switch: 1. RARP Request (Broadcast: Ethernet Type 0x8035)<br/>"My MAC is 00:11:22:33:44:55. What is my IP?"
+    Switch->>Server: Floods Broadcast to RARP Server
+    Note over Server: Looks up MAC in static database table.
+    Server-->>Client: 2. RARP Reply (Unicast: Ethernet Type 0x8035)<br/>"Your assigned IP is 192.168.1.50"
+    Note over Client: Configures network interface with 192.168.1.50!
+```
+
+### Operational Mechanics
+1. **The Diskless Workstation Problem**: Early network workstations lacked internal hard drives to minimize costs and maintain security. When powered on, the machine's bootstrap code in ROM could read its physical MAC address from the NIC, but could not know its IP address.
+2. **RARP Request**: The workstation broadcasts a special Ethernet frame (EtherType `0x8035`) asking a central RARP server to supply its IP address.
+3. **RARP Reply**: A designated RARP server queries a static mapping file (`/etc/ethers`) and returns the configured IP address via a unicast frame.
+
+### Why RARP Was Deprecated:
+1. **Layer 2 Limitation**: RARP operates directly over raw Ethernet frames. Routers do not forward Layer 2 broadcast frames, meaning an organization had to deploy and maintain a physical RARP server on **every individual LAN cable segment**.
+2. **Incomplete Configuration**: RARP delivered **only an IP address**. It could not provide a subnet mask, default gateway, DNS server, or lease timer.
+3. **Superseded By**: Replaced first by **BOOTP (Bootstrap Protocol)**, which used UDP and relay agents, and ultimately by **DHCP**.
+
+---
+
+## 9.6 IGMP (Internet Group Management Protocol)
+
+### Purpose: Multicast Group Coordination
+In standard IP communication, traffic is either **Unicast** (one sender to one receiver) or **Broadcast** (one sender to all devices on a subnet). However, applications like IPTV broadcasting, video conferencing, and multi-party distributed computing require **Multicast**—delivering a single stream of packets simultaneously to a specific subset of interested receivers without burdening disinterested hosts.
+
+The **Internet Group Management Protocol (IGMP - RFC 2236 / RFC 3376)** operates at Layer 3 to manage **multicast group memberships between local hosts and their immediate multicast routers**.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Host1 as Interested Host 1
+    participant Host2 as Disinterested Host 2
+    participant Router as Multicast Querier Router
+    
+    Note over Host1: User launches IPTV application (Joins Group 239.1.2.3)
+    Host1->>Router: 1. IGMP Membership Report (Joins Group 239.1.2.3)
+    Note over Router: Router registers Subnet as having active viewers!
+    Note over Router: Forwards incoming IPTV Multicast stream to this subnet.
+    
+    Note over Router: Periodic Keepalive Check (Every 125 seconds)
+    Router->>Host1: 2. IGMP Membership Query (Broadcast to 224.0.0.1 - All Hosts)
+    Router->>Host2: 2. IGMP Membership Query (Heard by Host 2)
+    Note over Host2: Not interested in any groups. Discards query.
+    Host1-->>Router: 3. IGMP Membership Report (Confirms still watching 239.1.2.3)
+    
+    Note over Host1: User closes IPTV app
+    Host1->>Router: 4. IGMP Leave Group (Sent to 224.0.0.2 - All Routers)
+    Note over Router: Router halts multicast stream to this subnet!
+```
+
+### Key Operational Messages (IGMPv2)
+1. **Membership Query**: Multicast routers periodically transmit a General Query to the "All Systems" multicast address `224.0.0.1` to determine whether active members still exist on the local subnet.
+2. **Membership Report**: When a host joins a multicast group (Class D address `224.0.0.0` to `239.255.255.255`) or replies to a query, it transmits an IGMP Membership Report naming the target group. Hosts use randomized response suppression timers to prevent query report storms.
+3. **Leave Group**: Transmitted by a host to the "All Routers" multicast address `224.0.0.2` when it ceases listening to a multicast stream, allowing the router to prune the branch and save link bandwidth.
+4. **IGMP Snooping**: Managed Layer 2 switches listen to IGMP join/leave messages exchanged between hosts and routers. Instead of flooding multicast frames out all switch ports, the switch selectively forwards multicast traffic **only to ports with active registered listeners**.
+
+---
+
+## 9.7 BGP (Border Gateway Protocol)
+
+### Role: The Glue of the Global Internet
+While internal routing protocols (RIP, OSPF, EIGRP) calculate optimal paths inside a private network, the **Border Gateway Protocol (BGP-4 - RFC 4271)** manages how packets are routed **between independent Autonomous Systems (AS)** across the global Internet backbone.
+
+```mermaid
+flowchart LR
+    subgraph AS10["AS 10 (University / Enterprise)"]
+        R_A["Border Router A<br/>ASN: 10"]
+    end
+
+    subgraph AS20["AS 20 (Regional Telecom ISP)"]
+        R_B["Border Router B<br/>ASN: 20"]
+    end
+
+    subgraph AS30["AS 30 (Tier-1 Global Backbone)"]
+        R_C["Border Router C<br/>ASN: 30"]
+    end
+
+    R_A <===>|"eBGP Peering (TCP 179)<br/>Advertises 130.10.0.0/16<br/>AS-PATH: [10]"| R_B
+    R_B <===>|"eBGP Peering (TCP 179)<br/>Advertises 130.10.0.0/16<br/>AS-PATH: [20, 10]"| R_C
+```
+
+### Core Architecture & Mechanics
+1. **Path Vector Protocol**: Unlike Distance Vector (which tracks only hop counts) or Link State (which floods individual link costs), BGP advertises reachable IP network prefixes paired with an ordered list of Autonomous Systems that traffic must traverse: the **AS-PATH Attribute**.
+2. **Absolute Loop Immunity**: When a border router receives a BGP advertisement, it examines the AS-PATH. If its own local Autonomous System Number (ASN) is already present in the list, the router detects an inter-domain routing loop and **immediately discards the route**.
+3. **Policy-Based Routing**: Core Internet transit is driven by business contracts, peering agreements, and legal regulations rather than raw line speed. BGP utilizes extensible path attributes (e.g., `LOCAL_PREF`, `AS-PATH`, `MED`, `NEXT_HOP`) to enforce complex economic policies (e.g., *"Prefer customer links over competitor links"*).
+4. **Reliable Peering over TCP Port 179**: BGP does not implement custom retransmission, fragmentation, or keepalive transport mechanisms. Instead, neighbor routers establish a point-to-point peering connection over reliable **TCP Port 179**.
+5. **Types of BGP Sessions**:
+   - **External BGP (eBGP)**: Peering session between border routers residing in **different** Autonomous Systems (used across Internet exchange points).
+   - **Internal BGP (iBGP)**: Peering session between routers residing within the **same** Autonomous System to distribute externally learned Internet routes to all internal boundary routers.
+
+---
+
+## 9.8 Master Comparison Matrix of Network Layer Protocols
+
+| Protocol | Full Name | Primary Operational Role | Addressing Involved | Underlying Encapsulation | Transmission Scope | RFC Specification |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **IPv6** | Internet Protocol Version 6 | Next-Gen packet routing & global addressing | 128-bit Logical IPv6 Addresses | Direct Layer 2 Frame payload | Global Multi-Hop Internet | RFC 8200 |
+| **ICMP** | Internet Control Message Protocol | Network diagnostics, error reporting, Ping/Traceroute | IP Addresses (Header Data) | Encapsulated in IP (Protocol 1 / 58)| Host-to-Host / Router-to-Host | RFC 792 / RFC 4443 |
+| **ARP** | Address Resolution Protocol | Resolves logical IP address to physical MAC | Translates 32-bit IP $\to$ 48-bit MAC | Raw Layer 2 Frame (EtherType `0x0806`) | Local Broadcast Domain (Single Hop)| RFC 826 |
+| **RARP** | Reverse Address Resolution Protocol | Resolves physical MAC address to logical IP | Translates 48-bit MAC $\to$ 32-bit IP | Raw Layer 2 Frame (EtherType `0x8035`) | Local Broadcast Domain (Single Hop)| RFC 903 (Deprecated) |
+| **IGMP** | Internet Group Management Protocol | Manages host multicast group memberships | 32-bit Class D Multicast Addresses | Encapsulated in IP (Protocol 2) | Local Subnet (Host to Local Router)| RFC 2236 (v2) / RFC 3376 (v3) |
+| **BGP** | Border Gateway Protocol | Routes packets across global Autonomous Systems | Prefix/CIDR blocks + Autonomous System Numbers | Encapsulated in TCP (Port 179) | Global Internet Backbone (Inter-AS)| RFC 4271 (BGP-4) |
