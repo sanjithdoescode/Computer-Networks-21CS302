@@ -5,3 +5,6 @@
 4. CSMA/CA
 5. IPv4
 6. Routing Protocols - OSPF, RIP, BGP
+7. DHCP
+8. Congestion Control ALgorithm
+

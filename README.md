@@ -69,4 +69,17 @@ Available in: [UNIT - 3/long_questions_answers.md](UNIT%20-%203/long_questions_a
    - *RIP (v1/v2)*: Hop count metric, 15-hop limit, 30s updates over UDP 520, classful vs. classless.
    - *OSPF (v2/v3)*: Inverse bandwidth cost, 2-tier area hierarchy (Backbone Area 0, ABR, ASBR), 5 packet types, DR/BDR election, Dijkstra SPF over IP protocol 89.
    - *BGP-4*: Path Vector EGP, AS-PATH loop prevention, policy routing attributes (NEXT_HOP, LOCAL_PREF, MED), reliable peering over TCP 179.
+7. **Dynamic Host Configuration Protocol (DHCP)**:
+   - Evolutionary progression (RARP $\to$ BOOTP $\to$ DHCP), 3 allocation modes (Dynamic, Automatic, Static MAC reservation).
+   - 32-bit header field breakdown (op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr, sname, file, options with magic cookie).
+   - 4-step DORA lifecycle (Discover, Offer, Request, Acknowledge) and Gratuitous ARP verification.
+   - Lease renewal state machine ($T_1$ 50% unicast, $T_2$ 87.5% broadcast, expiration 100%).
+   - Cross-subnet DHCP Relay Agent architecture (`ip helper-address`), DHCP Starvation & Rogue Server attacks.
+8. **Congestion Control Algorithms**:
+   - Network congestion root causes, offered load vs. throughput curve, Knee and Cliff thresholds, congestion collapse.
+   - Open-Loop vs. Closed-Loop taxonomy.
+   - Traffic Shaping: **Leaky Bucket** (FIFO queue, constant output rate) vs. **Token Bucket** (token accumulation, controlled bursts).
+   - Mathematical proof of Maximum Burst Duration ($T = \frac{C}{M - r}$) and burst volume with numerical calculations.
+   - Closed-Loop feedback: Hop-by-Hop Backpressure, Choke Packets, and Explicit Congestion Notification (ECN - RFC 3168 with RED marking and TCP ECE/CWR flags).
+
 

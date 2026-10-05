@@ -42,6 +42,22 @@
    - 6.3 Open Shortest Path First (OSPF): Hierarchical Areas, LSAs & Dijkstra
    - 6.4 Border Gateway Protocol (BGP-4): Path Vector, AS-PATH & Internet Core
    - 6.5 Master Routing Protocol Comparison Matrix (RIP vs. OSPF vs. BGP)
+7. [Question 7: Dynamic Host Configuration Protocol (DHCP)](#question-7-dynamic-host-configuration-protocol-dhcp)
+   - 7.1 Introduction, Historical Evolution (RARP to BOOTP to DHCP), and Motivation
+   - 7.2 Three Address Allocation Mechanisms & Configuration Parameters
+   - 7.3 Detailed DHCP Message Format (RFC 2131 Header Layout)
+   - 7.4 The 4-Step DORA Exchange Protocol Lifecycle
+   - 7.5 Lease Renewal Timers (T1, T2, Expiration) and State Machine
+   - 7.6 Cross-Subnet DHCP Relay Agent Architecture
+   - 7.7 Security Threats & Mitigations (DHCP Starvation and Rogue Servers)
+   - 7.8 Master Comparison Matrix: RARP vs. BOOTP vs. DHCP
+8. [Question 8: Congestion Control Algorithms](#question-8-congestion-control-algorithms)
+   - 8.1 Network Congestion Principles & The Congestion Collapse Curve
+   - 8.2 General Taxonomy: Open-Loop (Preventative) vs. Closed-Loop (Reactive)
+   - 8.3 Traffic Shaping (Open-Loop): The Leaky Bucket Algorithm
+   - 8.4 Traffic Shaping (Open-Loop): The Token Bucket Algorithm & Mathematical Proof
+   - 8.5 Closed-Loop Congestion Control: Backpressure, Choke Packets, and ECN
+   - 8.6 Master Comparison Matrix of Congestion Control Techniques
 
 ---
 
@@ -1172,3 +1188,557 @@ Because the global Internet contains over 900,000 active routing prefixes, BGP d
 | **Loop Prevention** | Split Horizon, Poison Reverse | Inherent to Dijkstra Tree | AS-PATH attribute examination |
 | **Traffic Scalability** | Limited (< 15 routers) | High (thousands of routers) | Global Internet (> 900,000 prefixes)|
 | **Standard Specifications**| RFC 1058 (v1), RFC 2453 (v2) | RFC 2328 (OSPFv2), RFC 5340 (v3)| RFC 4271 (BGP-4) |
+
+
+---
+
+# Question 7: Dynamic Host Configuration Protocol (DHCP)
+
+## 7.1 Introduction, Historical Evolution, and Motivation
+
+In any TCP/IP network, a host cannot communicate over the Internet without proper network layer configuration parameters, including:
+1. A unique **IPv4 Address**.
+2. A **Subnet Mask** defining the local network boundary.
+3. The **Default Gateway** (router interface IP) to forward off-subnet traffic.
+4. One or more **Domain Name System (DNS) Server IP Addresses** to resolve hostnames.
+
+### The Evolution: Manual Configuration $\to$ RARP $\to$ BOOTP $\to$ DHCP
+- **Manual Static Configuration**: In early networks, network administrators manually walked to every machine, typed in a static IP address, subnet mask, and gateway. In modern enterprise networks with thousands of dynamic smartphones, laptops, and IoT devices, manual assignment leads to IP address conflicts, administrative gridlock, and massive configuration errors when network topology or gateway IPs change.
+- **Reverse Address Resolution Protocol (RARP - RFC 903)**: Allowed a diskless workstation that knew its 48-bit physical MAC address to broadcast an inquiry to a RARP server to discover its assigned 32-bit IP address. However, RARP operated strictly at the Data Link Layer (Layer 2) and could not cross router boundaries, could not configure subnet masks or default gateways, and required a dedicated RARP server on every physical wire.
+- **Bootstrap Protocol (BOOTP - RFC 951)**: Introduced an Application Layer protocol running over UDP (Ports 67 and 68) that could cross routers using relay agents and deliver an IP address along with a boot filename and gateway. However, BOOTP was static: an administrator had to manually pre-populate a lookup table matching each device's MAC address to a fixed IP. It lacked dynamic address pooling and automatic lease reclamation.
+- **Dynamic Host Configuration Protocol (DHCP - RFC 2131)**: Standardized by the IETF to provide complete, automated, and dynamic network parameter configuration, supporting temporary address leasing, dynamic pooling, and seamless mobile roaming across subnets.
+
+```mermaid
+flowchart TD
+    EVOL["Evolution of Host IP Configuration Protocols"]
+    
+    MAN["1. Manual Configuration<br/>- Error-prone, static, high administrative burden<br/>- Frequent duplicate IP address conflicts"]
+    RARP["2. RARP (RFC 903 - Layer 2)<br/>- Resolves MAC to IP<br/>- Cannot cross routers, no gateway or DNS delivery"]
+    BOOTP["3. BOOTP (RFC 951 - UDP 67/68)<br/>- Traverses routers via Relay Agents<br/>- Static pre-configured 1:1 MAC-to-IP binding only"]
+    DHCP["4. DHCP (RFC 2131 - Modern Standard)<br/>- Dynamic IP Pooling, Temporary Leases<br/>- Distributes IP, Mask, Gateway, DNS, MTU automatically"]
+    
+    MAN --> RARP --> BOOTP --> DHCP
+```
+
+---
+
+## 7.2 Three Address Allocation Mechanisms & Configuration Parameters
+
+DHCP supports three distinct IP address allocation mechanisms:
+1. **Dynamic Allocation (The Standard)**: The DHCP server manages a pool of available IP addresses. When a client boots or connects to the network, the server leases an IP address for a specified duration (the **Lease Time**). When the lease expires (or the client disconnects without renewing), the IP address returns to the pool for reallocation to another device.
+2. **Automatic Allocation**: The server assigns a permanent, static IP address from the pool to a requesting client upon its first connection. The address is never expired or reassigned to another host.
+3. **Manual / Static Reservation (MAC Binding)**: The network administrator configures a table on the DHCP server binding a specific hardware MAC address (e.g., `00:1A:2B:3C:4D:5E`) to a fixed reserved IP address (e.g., `192.168.1.10`). Whenever that machine requests an IP, the server always returns that exact IP (ideal for network printers, file servers, and management interfaces).
+
+```mermaid
+flowchart TD
+    subgraph DHCPAllocations["DHCP IP Allocation Modes"]
+        DYN["1. Dynamic Allocation<br/>Temporary Lease from Pool (Hours/Days)<br/>Reclaimed upon expiration or release"]
+        AUTO["2. Automatic Allocation<br/>Permanent unexpired assignment<br/>Allocated automatically on first connection"]
+        RES["3. Manual / Reservation<br/>Fixed binding: Static MAC <-> Fixed IP<br/>Used for Servers, Switches, Printers"]
+    end
+```
+
+### Essential Configuration Parameters Delivered to Clients
+A single DHCP transaction automatically distributes:
+- **IP Address**: The 32-bit logical address assigned to the host's NIC.
+- **Subnet Mask** (Option 1): Defines the network prefix and host portions.
+- **Default Gateway / Router IP** (Option 3): The IP of the local router interface.
+- **Domain Name Servers** (Option 6): Primary and secondary DNS resolvers (e.g., `8.8.8.8`, `1.1.1.1`).
+- **Domain Name** (Option 15): The local domain suffix (e.g., `corp.university.edu`).
+- **IP Lease Time** (Option 51): Duration in seconds for which the lease remains valid.
+- **Interface MTU** (Option 26): Prevents local packet fragmentation issues.
+
+---
+
+## 7.3 Detailed DHCP Message Format (RFC 2131 Header Layout)
+
+DHCP operates as an Application Layer protocol encapsulated directly inside **UDP datagrams**:
+- **DHCP Server Port**: UDP Port **67**
+- **DHCP Client Port**: UDP Port **68**
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     op (1)    |   htype (1)   |   hlen (1)    |   hops (1)    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                            xid (4)                            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|           secs (2)            |           flags (2)           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          ciaddr (4)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          yiaddr (4)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          siaddr (4)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          giaddr (4)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                          chaddr (16)                          |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          sname (64)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          file (128)                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                        options (variable)                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+### Field-by-Field Breakdown
+
+1. **op (Operation Code / Message Type, 8 bits)**:
+   - `1` = `BOOTREQUEST` (transmitted by client to server).
+   - `2` = `BOOTREPLY` (transmitted by server to client).
+2. **htype (Hardware Address Type, 8 bits)**: Specifies the physical network architecture (`1` for 10/100/1000 Mbps Ethernet).
+3. **hlen (Hardware Address Length, 8 bits)**: Length of the physical MAC address in bytes (`6` for 48-bit Ethernet MAC).
+4. **hops (8 bits)**: Incremented by intermediate DHCP Relay Agents when forwarding messages across subnets. Prevents loops (dropped if hops exceed 16).
+5. **xid (Transaction Identifier, 32 bits)**: A randomized integer generated by the client to correlate requests with server replies.
+6. **secs (Seconds Elapsed, 16 bits)**: Seconds elapsed since the client began the address acquisition or renewal process.
+7. **flags (16 bits)**:
+   - Leftmost bit is the **Broadcast Flag**: If set to `1`, the client informs the server: *"I do not yet have an IP address configured and cannot receive unicast packets; please broadcast your reply to `255.255.255.255`."*
+   - Remaining 15 bits are reserved and must be set to `0`.
+8. **ciaddr (Client IP Address, 32 bits)**: The client's existing IP address. Set to `0.0.0.0` during initial discovery; populated with the client's current IP during renewal.
+9. **yiaddr ('Your' IP Address, 32 bits)**: The IP address being offered or assigned by the server to the client.
+10. **siaddr (Server IP Address, 32 bits)**: The IP address of the next boot server to use in bootstrap configuration.
+11. **giaddr (Gateway / Relay Agent IP Address, 32 bits)**: Populated with the router's incoming interface IP when a DHCP Relay Agent forwards a client request to a remote server.
+12. **chaddr (Client Hardware Address, 16 bytes / 128 bits)**: The client's physical MAC address (e.g., `00:1A:2B:3C:4D:5E`, padded with zeroes to 16 bytes).
+13. **sname (Server Host Name, 64 bytes)**: Optional null-terminated string containing the server hostname.
+14. **file (Boot File Name, 128 bytes)**: Optional null-terminated string specifying a PXE network boot image path.
+15. **options (Variable Length)**: Begins with the 4-byte **Magic Cookie** (`99.130.83.99` in dotted-decimal) followed by TLV (Type-Length-Value) encoded option fields:
+    - *Option 53 (DHCP Message Type)*: Identifies the specific DHCP message (1=Discover, 2=Offer, 3=Request, 4=Decline, 5=Ack, 6=Nak, 7=Release, 8=Inform).
+    - *Option 1*: Subnet Mask.
+    - *Option 3*: Router (Default Gateway).
+    - *Option 6*: Domain Name Server (DNS).
+    - *Option 51*: IP Address Lease Time.
+    - *Option 255*: End Option (delimiter `0xFF`).
+
+---
+
+## 7.4 The 4-Step DORA Exchange Protocol Lifecycle
+
+When an unconfigured client joins a network, it obtains an IP configuration through the **DORA** transaction:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as DHCP Client (0.0.0.0:68)
+    participant Server1 as DHCP Server 1 (192.168.1.1:67)
+    participant Server2 as DHCP Server 2 (192.168.1.2:67)
+    
+    Note over Client: Step 1: D - DISCOVER (Broadcast)
+    Client->>Server1: DHCPDISCOVER (Src: 0.0.0.0:68 -> Dst: 255.255.255.255:67, xid=101)
+    Client->>Server2: DHCPDISCOVER (Broadcast heard by all local servers)
+    
+    Note over Server1,Server2: Step 2: O - OFFER (Propose IP)
+    Server1-->>Client: DHCPOFFER (yiaddr: 192.168.1.100, ServerID: 192.168.1.1)
+    Server2-->>Client: DHCPOFFER (yiaddr: 192.168.1.200, ServerID: 192.168.1.2)
+    
+    Note over Client: Step 3: R - REQUEST (Client accepts Server 1)
+    Client->>Server1: DHCPREQUEST (Broadcast: ServerID = 192.168.1.1, RequestIP = 192.168.1.100)
+    Client->>Server2: DHCPREQUEST (Server 2 sees it was not chosen; frees 192.168.1.200!)
+    
+    Note over Server1: Step 4: A - ACKNOWLEDGE (Commit Lease)
+    Server1-->>Client: DHCPACK (yiaddr: 192.168.1.100, Mask: /24, GW: 192.168.1.1, Lease: 86400s)
+    Note over Client: Client performs Gratuitous ARP: IP is conflict-free!
+```
+
+### 1. D — DHCPDISCOVER
+- **Source IP**: `0.0.0.0` (Client has no IP).
+- **Destination IP**: `255.255.255.255` (Limited Broadcast).
+- **Transport**: UDP Src Port `68`, Dst Port `67`.
+- **Purpose**: Broadcast to locate any available DHCP servers on the local segment. Contains the client's MAC address in `chaddr` and a unique random transaction ID (`xid`).
+
+### 2. O — DHCPOFFER
+- **Source IP**: DHCP Server's IP (e.g., `192.168.1.1`).
+- **Destination IP**: `255.255.255.255` (Broadcast) or Client MAC Unicast.
+- **Payload**: The server temporarily reserves an unallocated IP from its scope and returns it in the `yiaddr` field, along with the proposed subnet mask, default lease time, and the server's own IP address in Option 54 (Server Identifier).
+- Multiple DHCP servers may respond with distinct offers.
+
+### 3. R — DHCPREQUEST
+- **Source IP**: `0.0.0.0`.
+- **Destination IP**: `255.255.255.255` (Broadcast).
+- **Why Broadcast?**: The client selects one offer (typically the first received) and broadcasts its acceptance. Broadcasting notifies the winning server that its offer was accepted, while simultaneously notifying all other competing DHCP servers that their offers were declined, allowing them to return their reserved IPs back to their available address pools.
+
+### 4. A — DHCPACK (or DHCPNAK)
+- The selected server commits the lease binding to its permanent storage and transmits a **DHCPACK** packet containing complete network configuration parameters (IP, Subnet Mask, Gateway, DNS, Lease Time).
+- If the requested IP address becomes unavailable in the interim (e.g., allocated to another host), the server returns a **DHCPNAK (Negative Acknowledgment)**, forcing the client to restart the DORA cycle from Discover.
+- **Gratuitous ARP Verification**: Upon receiving the DHCPACK, the client transmits an ARP request for its newly acquired IP address. If another host replies, an IP conflict exists: the client transmits a **DHCPDECLINE** message to the server and restarts DORA.
+
+---
+
+## 7.5 Lease Renewal Timers (T1, T2, Expiration) and State Machine
+
+A DHCP lease is governed by three critical time thresholds:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: Client Boots
+    Init --> Selecting: Broadcasts DHCPDISCOVER
+    Selecting --> Requesting: Receives DHCPOFFER, sends DHCPREQUEST
+    Requesting --> Bound: Receives DHCPACK (Lease active!)
+    
+    Bound --> Renewing: Timer T1 (50% Lease) Expires<br/>Unicasts DHCPREQUEST to original server
+    Renewing --> Bound: Receives DHCPACK (Lease extended back to 100%!)
+    
+    Renewing --> Rebinding: Timer T2 (87.5% Lease) Expires<br/>No reply from original server! Broadcasts DHCPREQUEST
+    Rebinding --> Bound: Receives DHCPACK from ANY server
+    
+    Rebinding --> Init: Lease Expires (100%)<br/>Halts traffic, drops IP, restarts DORA
+    Bound --> Init: User disconnects (Sends DHCPRELEASE)
+```
+
+1. **Timer T1 (Renewal Timer - 50% of Lease)**:
+   - Default value: $0.5 \times \text{Lease Duration}$ (e.g., at 12 hours of a 24-hour lease).
+   - The client enters the **Renewing State** and transmits a **unicast DHCPREQUEST** directly to the original granting DHCP server.
+   - If the server replies with a DHCPACK, the lease timer resets to $100\%$ and the client returns to the Bound state.
+2. **Timer T2 (Rebinding Timer - 87.5% of Lease)**:
+   - Default value: $0.875 \times \text{Lease Duration}$ (e.g., at 21 hours of a 24-hour lease).
+   - If the original server crashed or is unreachable, the client enters the **Rebinding State**. It **broadcasts a DHCPREQUEST to `255.255.255.255`**, asking any active DHCP server on the network to extend its lease.
+3. **Lease Expiration (100% of Lease)**:
+   - If no DHCPACK is received by the time the lease reaches $100\%$, the client must immediately release the IP address, cease all network communication, and transition back to the **Init State**, broadcasting a new DHCPDISCOVER.
+4. **Explicit Release (`DHCPRELEASE`)**:
+   - When a workstation performs a clean shutdown or an administrator executes `ipconfig /release`, the client sends an unacknowledged **DHCPRELEASE** unicast to the server, releasing the lease immediately.
+
+---
+
+## 7.6 Cross-Subnet DHCP Relay Agent Architecture
+
+By default, routers are configured to block broadcast packets (`255.255.255.255`) to prevent broadcast storms. If a network consists of multiple subnets, deploying a dedicated physical DHCP server on every single subnet is economically wasteful.
+
+The solution is a **DHCP Relay Agent (RFC 1542 / RFC 2131)**, typically built directly into the local router interface:
+
+```mermaid
+flowchart LR
+    subgraph SubnetA["Subnet A: 192.168.10.0/24"]
+        CLIENT["DHCP Client<br/>MAC: 00:AA:BB:CC:DD:EE"]
+    end
+
+    subgraph EdgeRouter["Intermediate Edge Router (DHCP Relay Agent)"]
+        direction TB
+        INT_A["Interface G0/0: 192.168.10.1<br/>Config: ip helper-address 10.0.0.50"]
+        INT_WAN["Interface G0/1: 10.0.0.1"]
+        INT_A --- INT_WAN
+    end
+
+    subgraph CentralSubnet["Server Farm Subnet: 10.0.0.0/24"]
+        DHCPSRV[("Central Enterprise<br/>DHCP Server: 10.0.0.50")]
+    end
+
+    CLIENT -->|"1. Local Broadcast:<br/>Src: 0.0.0.0 Dst: 255.255.255.255"| INT_A
+    INT_A -->|"2. Unicast Forward:<br/>Sets giaddr = 192.168.10.1<br/>Src: 10.0.0.1 Dst: 10.0.0.50"| DHCPSRV
+    DHCPSRV -->|"3. Unicast Reply:<br/>Picks IP from 192.168.10.0 pool<br/>Dst: 10.0.0.1"| INT_WAN
+    INT_A -->|"4. Local Delivery to Client"| CLIENT
+```
+
+### Operational Steps of the Relay Agent:
+1. The client broadcasts a `DHCPDISCOVER` on Subnet A (`192.168.10.0/24`).
+2. The router's local interface receives the broadcast on UDP Port 67. Recognizing the `ip helper-address 10.0.0.50` command, the router acts as a Relay Agent.
+3. The router populates the **`giaddr` (Gateway IP Address)** field in the DHCP header with its own local interface address (`192.168.10.1`).
+4. The router encapsulates the DHCP message in a **unicast IP packet** ($\text{Src: } 10.0.0.1, \text{Dst: } 10.0.0.50$) and routes it across the enterprise network to the central DHCP server.
+5. The central DHCP server inspects `giaddr = 192.168.10.1`. It recognizes that the client resides on Subnet A, selects an available IP from the `192.168.10.0/24` scope, and unicasts a `DHCPOFFER` back to the router.
+6. The router decapsulates the packet and delivers the offer locally to the client.
+
+---
+
+## 7.7 Security Threats & Mitigations
+
+Because early DHCP protocols lacked authentication, dynamic networks face two primary security threats:
+1. **DHCP Starvation Attack**: A malicious attacker uses automated tools (e.g., Gobbler) to generate thousands of bogus `DHCPDISCOVER` packets with randomized spoofed MAC addresses. The DHCP server exhausts its entire address pool, denying network access to legitimate users (**Denial of Service**).
+   - *Mitigation*: **Switch Port Security** restricts the maximum number of unique MAC addresses learned on an access switch port.
+2. **Rogue DHCP Server Attack**: An unauthorized rogue router or attacker on the local network responds to `DHCPDISCOVER` broadcasts faster than the legitimate server, offering its own IP as the Default Gateway and DNS server. This allows the attacker to intercept all outbound user traffic (**Man-in-the-Middle Attack**).
+   - *Mitigation*: **DHCP Snooping** on Layer 2 managed switches. Switch ports are categorized as **Trusted** (uplinks connected to authorized DHCP servers) or **Untrusted** (user access ports). The switch drops any `DHCPOFFER` or `DHCPACK` packets arriving on untrusted ports.
+
+---
+
+## 7.8 Master Comparison Matrix: RARP vs. BOOTP vs. DHCP
+
+| Parameter | RARP (RFC 903) | BOOTP (RFC 951) | DHCP (RFC 2131) |
+| :--- | :--- | :--- | :--- |
+| **OSI Layer** | Data Link Layer (Layer 2) | Application Layer (Layer 7) | Application Layer (Layer 7) |
+| **Transport Layer** | Raw Ethernet frames (Type `0x8035`)| UDP (Port 67 Server / 68 Client)| UDP (Port 67 Server / 68 Client)|
+| **Router Traversal** | Cannot cross routers | Crosses routers via Relay Agents| Crosses routers via Relay Agents|
+| **Address Allocation** | Static 1:1 hardware lookup | Static 1:1 manual table binding | Dynamic, Automatic, and Static |
+| **Lease Mechanism** | No lease concept | Permanent assignment | Dynamic lease time ($T_1, T_2$, Exp)|
+| **Parameters Delivered** | IP address only | IP, Gateway, Boot image path | IP, Mask, Gateway, DNS, MTU, etc.|
+| **Packet Structure** | Fixed 28-byte hardware frame | Fixed 300-byte message | Extensible message via TLV Options|
+| **Address Reuse** | No address reuse | No address reclamation | Reclaims IPs when leases expire |
+
+---
+
+# Question 8: Congestion Control Algorithms
+
+## 8.1 Network Congestion Principles & The Congestion Collapse Curve
+
+In a packet-switched network, **Congestion** occurs when the aggregate volume of packets injected into the network approaches or exceeds the transmission capacity of intermediate communication links and the buffer capacity of intermediate routers.
+
+```mermaid
+flowchart TD
+    subgraph CongestionRootCauses["Root Causes of Network Congestion"]
+        C1["1. Packet Arrival Rate Exceeds Outgoing Link Bandwidth"]
+        C2["2. Slow Router Processors (Queue Processing Bottlenecks)"]
+        C3["3. Mismatched Link Capacities (e.g., 10 Gbps feeding into 100 Mbps)"]
+        C4["4. Buffer Exhaustion (Router queues overflow -> Packet Drops)"]
+    end
+```
+
+### The Congestion Collapse Phenomenon
+When input traffic load increases, network behavior passes through three distinct operating regimes:
+
+```mermaid
+flowchart LR
+    LOAD["Offered Load (Traffic Injected)"]
+    
+    Z1["Regime 1: Linear Growth<br/>Throughput = Offered Load<br/>Buffers absorb brief bursts, zero drops"]
+    Z2["Regime 2: The Knee<br/>Queues fill, delay increases exponentially<br/>Throughput increases sub-linearly"]
+    Z3["Regime 3: The Cliff<br/>Buffer Overflow -> Massive Packet Drops<br/>Retransmissions saturate links -> Throughput drops to near ZERO!"]
+    
+    LOAD --> Z1 --> Z2 --> Z3
+```
+
+- **The Knee**: The point where queues begin to build up. Delay starts increasing exponentially while throughput gains flatten out.
+- **The Cliff**: The critical threshold where router buffers completely fill up. Arriving packets are dropped. Dropped packets trigger end-to-end transport layer retransmissions (e.g., TCP timeout retransmits). These retransmissions inject even more duplicate packets into already congested links, triggering a positive feedback spiral called **Congestion Collapse**, reducing effective goodput to near zero.
+
+---
+
+## 8.2 General Taxonomy: Open-Loop vs. Closed-Loop Congestion Control
+
+Congestion control mechanisms are broadly categorized into two structural paradigms:
+
+```mermaid
+flowchart TD
+    CONG_TAX["Congestion Control Taxonomy"]
+    
+    OPEN["1. Open-Loop Congestion Control<br/>(Preventative / Proactive)<br/>Design policies to prevent congestion before it occurs"]
+    CLOSED["2. Closed-Loop Congestion Control<br/>(Reactive / Feedback-Driven)<br/>Detect congestion dynamically & throttle transmission"]
+    
+    CONG_TAX --> OPEN
+    CONG_TAX --> CLOSED
+    
+    OPEN --> LB["Leaky Bucket Algorithm (Traffic Shaping)"]
+    OPEN --> TB["Token Bucket Algorithm (Traffic Policing)"]
+    OPEN --> POL["Protocol Policies (Window, Discard, Retransmit)"]
+    
+    CLOSED --> BP["Backpressure (Hop-by-Hop Throttling)"]
+    CLOSED --> CP["Choke Packets (Source Quench)"]
+    CLOSED --> ECN["Explicit Congestion Notification (ECN / RED)"]
+```
+
+### 1. Open-Loop (Preventative) Control
+Policies implemented at the sender and intermediate nodes to ensure congestion never begins:
+- **Retransmission Policy**: Dynamic timer optimization (Jacobson's RTT calculation) prevents premature retransmissions of packets that are merely delayed in queues.
+- **Window Policy**: Selective Acknowledgment (SACK) prevents retransmitting entire windows when only a single packet was lost.
+- **Discarding Policy**: Priority-based packet dropping (e.g., dropping low-priority video frames before dropping audio or control packets).
+- **Traffic Shaping**: Enforcing smoothness on injected traffic streams using the **Leaky Bucket** and **Token Bucket** algorithms.
+
+### 2. Closed-Loop (Reactive) Control
+Mechanisms that monitor system performance, detect when queues reach critical thresholds, and feed signals back to traffic sources to reduce injection rates.
+
+---
+
+## 8.3 Traffic Shaping (Open-Loop): The Leaky Bucket Algorithm
+
+The **Leaky Bucket Algorithm** shapes bursty transmission streams into a completely smooth, uniform, constant-rate output flow, analogous to a bottom-perforated water bucket:
+
+```mermaid
+flowchart TD
+    subgraph LeakyBucketMechanics["The Leaky Bucket Algorithm"]
+        BURST["Bursty Input Traffic<br/>(Variable Arrival Rate: Packet Spikes)"]
+        
+        subgraph Bucket["Finite Capacity FIFO Buffer (Capacity = C Bytes)"]
+            WATER["Buffered Packets Queued in FIFO Memory"]
+        end
+        
+        DROP["Overflow Discarded!<br/>If Input > Capacity C"]
+        DRAIN["Leak at Constant Uniform Rate<br/>(Fixed Output Rate: r Bytes/sec)"]
+        SMOOTH["Smooth Constant Output Flow to Network"]
+        
+        BURST --> Bucket
+        Bucket -.->|"Queue Overflow"| DROP
+        Bucket --> DRAIN --> SMOOTH
+    end
+```
+
+### Operating Principles
+1. Packets generated by an application arrive at irregular, bursty intervals and enter a finite FIFO queue (the bucket) of capacity $C$ bytes.
+2. The bucket releases packets onto the transmission medium at a **fixed, constant rate of $r$ bytes/second**, regardless of how many packets are queued in the bucket.
+3. If a sudden burst of packets arrives that exceeds the remaining capacity of the bucket ($C$), the excess packets **overflow and are dropped**.
+
+### Evaluation of the Leaky Bucket
+- **Advantage**: Eliminates burstiness; downstream routers receive traffic at a predictable, constant rate with zero queuing jitter.
+- **Disadvantage**: Inflexible and overly rigid. If an idle host with an empty bucket suddenly needs to send a burst of data, the leaky bucket restricts the output to rate $r$, delaying packets even when the network has idle bandwidth. It does not allow short bursts of high-speed transmission.
+
+---
+
+## 8.4 Traffic Shaping (Open-Loop): The Token Bucket Algorithm
+
+The **Token Bucket Algorithm** addresses the rigidity of the leaky bucket by **allowing controlled bursts of high-speed traffic** while still enforcing an average transmission rate over time.
+
+```mermaid
+flowchart TD
+    subgraph TokenBucketMechanics["The Token Bucket Algorithm"]
+        direction TB
+        GEN["Token Generator<br/>Adds tokens at constant rate: r tokens/sec"]
+        
+        subgraph TokenPool["Token Bucket Storage (Capacity = C Tokens)"]
+            TOKENS["Stored Token Pool"]
+        end
+        
+        DISCARD_TOK["Excess Tokens Discarded<br/>(When Bucket Reaches Capacity C)"]
+        
+        GEN --> TokenPool
+        TokenPool -.->|"Bucket Full"| DISCARD_TOK
+        
+        PKT_IN["Incoming Data Packets<br/>(Bursty Traffic)"]
+        GATE{"Check Token Pool:<br/>Are enough tokens available?"}
+        
+        PKT_IN --> GATE
+        TokenPool --> GATE
+        
+        GATE -- Yes --> TRANSMIT["Remove k tokens from pool<br/>Transmit Packet immediately at link speed!"]
+        GATE -- No --> WAIT_DROP["Wait for tokens to accumulate<br/>or Drop / Tag as Low Priority"]
+    end
+```
+
+### Operating Principles
+1. A token generator produces tokens at a constant rate of $r$ tokens per second and deposits them into a bucket with a finite capacity of $C$ tokens.
+2. If the bucket becomes full, newly generated tokens overflow and are discarded.
+3. To transmit a packet of size $k$ bytes, the transmitter must remove $k$ bytes' worth of tokens from the bucket.
+4. **Burst Handling**: If the bucket is completely full of $C$ tokens, a burst of data can consume all $C$ tokens instantly, transmitting at the maximum physical link speed ($M$) until the stored tokens are depleted.
+5. Once the token bucket is emptied, subsequent packets can only be transmitted as fast as new tokens are generated ($r$ tokens/second).
+
+---
+
+### Mathematical Derivation of Maximum Burst Duration
+
+Let:
+- $C$ = Capacity of the token bucket in bytes (maximum accumulated tokens).
+- $r$ = Token generation rate in bytes/second (sustainable average rate).
+- $M$ = Maximum physical link transmission speed in bytes/second (peak rate, where $M > r$).
+- $T$ = Maximum burst duration (the time during which the source can transmit at peak rate $M$).
+
+During a burst of duration $T$, the total volume of bytes transmitted at peak rate $M$ is:
+$$\text{Total Transmitted Bytes} = M \times T$$
+
+During this same time interval $T$, the total tokens available to authorize transmission come from two sources:
+1. The initially stored tokens in the bucket ($C$).
+2. The newly generated tokens produced during the burst ($r \times T$).
+
+Equating the bytes transmitted to the total tokens available:
+$$M \times T = C + (r \times T)$$
+
+Subtracting $r T$ from both sides:
+$$M T - r T = C \implies T(M - r) = C$$
+
+Solving for maximum burst duration $T$:
+$$\mathbf{T = \frac{C}{M - r} \quad \text{seconds}}$$
+
+The maximum volume of data transmitted during this peak burst is:
+$$\mathbf{\text{Max Burst Volume} = M \times T = \frac{C \cdot M}{M - r} \quad \text{bytes}}$$
+
+#### Concrete Numerical Example
+Assume:
+- Token bucket capacity $C = 1\text{ MB} = 1,000,000\text{ bytes}$
+- Token arrival rate $r = 20\text{ MB/s}$
+- Peak link transmission speed $M = 100\text{ MB/s}$
+
+Calculate the maximum burst duration $T$:
+$$T = \frac{C}{M - r} = \frac{1\text{ MB}}{100\text{ MB/s} - 20\text{ MB/s}} = \frac{1}{80} = \mathbf{0.0125\text{ seconds}} = \mathbf{12.5\text{ milliseconds}}$$
+
+Calculate the total data volume transmitted during this 12.5 ms burst:
+$$\text{Volume} = M \times T = 100\text{ MB/s} \times 0.0125\text{ s} = \mathbf{1.25\text{ Megabytes}}$$
+
+---
+
+### Comparison Matrix: Leaky Bucket vs. Token Bucket
+
+| Evaluation Feature | Leaky Bucket Algorithm | Token Bucket Algorithm |
+| :--- | :--- | :--- |
+| **Output Rate Profile** | Strictly constant, uniform output rate | Variable output rate; allows controlled bursts |
+| **Burst Accommodation** | Discards bursts; smooths all traffic | Permits bursts up to accumulated capacity $C$ |
+| **Storage Mechanism** | Queues data packets in physical buffer memory| Stores abstract tokens (integer counters) |
+| **Dropped Entity** | Drops actual data packets on buffer overflow | Drops abstract tokens on overflow (no data loss)|
+| **Network Idle Benefit**| Idle periods provide no future credit | Idle periods save tokens for future bursts |
+| **Implementation Complexity**| Requires physical queue management | Simple integer increment/decrement counter |
+
+---
+
+## 8.5 Closed-Loop Congestion Control: Backpressure, Choke Packets, and ECN
+
+Closed-loop techniques dynamically detect congestion within the network fabric and throttle traffic sources:
+
+```mermaid
+flowchart LR
+    subgraph ClosedLoopMethods["Closed-Loop Congestion Feedback Approaches"]
+        direction TB
+        M1["1. Hop-by-Hop Backpressure: Congested node throttles immediate upstream node"]
+        M2["2. Choke Packets: Congested router generates ICMP packet directly to source"]
+        M3["3. Explicit Congestion Notification (ECN): Marks IP header bits; receiver echoes in ACK"]
+    end
+```
+
+### 1. Hop-by-Hop Backpressure
+In a connection-oriented virtual circuit network, when an intermediate node's buffers fill beyond a threshold, it tells its immediate upstream neighbor to slow down. That neighbor buffers packets and in turn tells its upstream neighbor to slow down, propagating the backpressure link-by-link back to the originating host.
+
+```mermaid
+flowchart LR
+    SRC["Source Host"] <==|"(3) Slow Down!"| SW1["Switch 1"]
+    SW1 <==|"(2) Slow Down!"| SW2["Switch 2"]
+    SW2 <==|"(1) Buffers Full! Slow Down!"| SW3["Congested Switch 3"]
+```
+
+---
+
+### 2. Choke Packets
+A **Choke Packet** is a specialized control packet generated by a congested intermediate router and transmitted directly back to the source host:
+- When a router's queue utilization exceeds a threshold (e.g., $75\%$), it filters arriving packets, extracts their source IP addresses, and generates a choke packet (historically implemented as an **ICMP Source Quench** message).
+- Upon receiving the choke packet, the source host reduces its transmission rate by a specified percentage (e.g., halving its congestion window).
+- Intermediate nodes along the path do not need to process or buffer the choke signal.
+
+---
+
+### 3. Explicit Congestion Notification (ECN - RFC 3168)
+Modern networks implement **ECN**, which operates without dropping packets or generating extra choke traffic:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Sender as TCP Sender
+    participant Router as Congested Intermediate Router
+    participant Receiver as TCP Receiver
+    
+    Note over Sender: Transmits IP Packet with ECN = 10 (ECT: ECN Capable)
+    Sender->>Router: Data Packet (ECT=1, CE=0)
+    Note over Router: RED Queue reaches threshold!<br/>Marks ECN bits: CE = 11 (Congestion Experienced)
+    Router->>Receiver: Forwards Data Packet with CE = 11
+    Note over Receiver: Reads CE=11! Sets ECE flag in TCP ACK!
+    Receiver-->>Sender: TCP ACK (with ECE = 1 flag set)
+    Note over Sender: Sees ECE! Triggers Fast Recovery (halves cwnd)!
+    Sender->>Receiver: Next Data Packet (Sets CWR = 1 flag: Window Reduced confirmed)
+```
+
+1. **Header Bits**:
+   - The IPv4/IPv6 header contains two ECN bits (Bits 6 and 7 of the Traffic Class / DSCP field):
+     - `00`: Non ECN-Capable Transport (Non-ECT).
+     - `01` / `10`: ECN-Capable Transport (`ECT(1)` / `ECT(0)`).
+     - `11`: Congestion Experienced (`CE`).
+2. **Detection & Marking**: Intermediate routers run **Random Early Detection (RED)** queue monitoring. When the average queue length exceeds a threshold, instead of dropping an ECT-marked packet, the router rewrites the ECN field to `11` (`CE`).
+3. **Echo and Window Reduction**:
+   - The destination receiver notices `CE = 11`. In its next TCP Acknowledgment segment, it sets the **ECE (ECN-Echo)** flag in the TCP header.
+   - The sender receives the ECE flag, interprets it as a congestion signal, reduces its congestion window ($\text{cwnd} = \frac{\text{cwnd}}{2}$) just as it would upon packet loss, and marks its next data packet with the **CWR (Congestion Window Reduced)** flag to notify the receiver that congestion was handled.
+
+---
+
+## 8.6 Master Comparison Matrix of Congestion Control Techniques
+
+| Feature / Metric | Leaky Bucket | Token Bucket | Backpressure | Choke Packets | Explicit Congestion Notification (ECN) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Control Category** | Open-Loop (Proactive) | Open-Loop (Proactive) | Closed-Loop (Reactive) | Closed-Loop (Reactive) | Closed-Loop (Reactive) |
+| **Operating Location** | Edge Host / Shaper | Edge Host / Shaper | Hop-by-Hop Switches | Core Router to Source | Core Router to Receiver to Source |
+| **Burst Handling** | Eliminates all bursts | Permits bounded bursts | Buffers upstream | Throttles source | Throttles source |
+| **Control Overhead** | Zero control packets | Zero control packets | Hop-by-hop signaling | Dedicated control packet | Re-uses 2 IP bits + 2 TCP flags |
+| **Packet Drop Risk** | Drops on bucket full | Drops only on queue full | Zero drops (flow back) | Packets dropped on queue full | Zero drops (marks packets before drop)|
+| **Feedback Latency** | None (Static Policy) | None (Static Policy) | Immediate per hop | Round-trip propagation | Full RTT (data forward + ACK back) |
+| **Standard Tech** | ATM traffic shaping | Cisco IOS rate limiting | X.25, Virtual Circuits | ICMP Source Quench (Legacy) | RFC 3168 (Modern Internet TCP/IP) |
