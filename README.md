@@ -4,6 +4,22 @@ Repository containing study notes, question banks, university exam preparation m
 
 ---
 
+## 📕 Complete Master Exam Preparation Textbook (PDF)
+> 🎓 **Official Publication**: **[`Computer_Networks_21CS302_Master_Textbook.pdf`](Computer_Networks_21CS302_Master_Textbook.pdf)**  
+> **Pages**: 341 Pages (A4) &bull; **Vector Architectural Diagrams**: 162 SVG Figures &bull; **Math**: Typeset via KaTeX  
+> **Target Standard**: Autonomous Engineering Institutions & Anna University Regulations 2021  
+> **Complete Solution Manual**: Eliminates the need for multiple textbooks or internet searching during exam preparation.
+> 
+> * **Front Matter**: Official Syllabus (CO1–CO5), 16-Mark University Exam Scoring Blueprint, and Hyperlinked Master Table of Contents.
+> * **Unit I**: 11 Short Questions (2/5 Marks) + 5 Long Essays (16 Marks) with 40 Diagrams.
+> * **Unit II**: 5 Long Essays (16 Marks) with 22 Diagrams.
+> * **Unit III**: 9 Long Essays (16 Marks) with 47 Diagrams.
+> * **Unit IV**: 5 Comprehensive Thematic Chapters covering all Q1–Q11 with 29 Diagrams.
+> * **Unit V**: 8 Long Essays (16 Marks) with 24 Diagrams.
+> * **Appendices**: Master Acronym Dictionary (75+ terms), Complete Port Numbers & Protocols Master Matrix, and Comprehensive Exam Formula Sheet.
+
+---
+
 ## 📚 Repository Structure
 
 ```

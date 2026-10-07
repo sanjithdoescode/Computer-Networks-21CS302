@@ -1,0 +1,9 @@
+node_modules/
+build_textbook/node_modules/
+build_textbook/master_textbook.html
+build_textbook/index.ts
+build_textbook/CLAUDE.md
+build_textbook/bun.lock*
+*.log
+.DS_Store
+

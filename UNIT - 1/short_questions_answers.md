@@ -616,7 +616,7 @@ There are two primary types of line configuration:
 flowchart TD
     subgraph P2P["1. Point-to-Point Configuration (Dedicated Link)"]
         direction LR
-        STA1["Station A"] <====="Dedicated Capacity Channel"=====> STA2["Station B"]
+        STA1["Station A"] <-->|"Dedicated Capacity Channel"| STA2["Station B"]
     end
 
     subgraph MP["2. Multipoint Configuration (Shared Link)"]

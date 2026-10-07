@@ -792,10 +792,10 @@ sequenceDiagram
     Note over Other: Overhearing stations parse RTS Duration
     Note over Other: Set Virtual Carrier Sense (NAV) Timer!
     AP-->>Sender: 2. CTS (Clear to Send - Duration = Remaining NAV)
-    Note over Other: Stations in AP range hear CTS; update NAV!
+    Note over Other: Stations in AP range hear CTS, update NAV!
     Sender->>AP: 3. DATA Frame (Payload)
     AP-->>Sender: 4. ACK Frame (Transmission Confirmed)
-    Note over Other: NAV timer expires; channel available again
+    Note over Other: NAV timer expires, channel available again
 ```
 
 ### The Mechanics of the Network Allocation Vector (NAV)
@@ -1347,7 +1347,7 @@ sequenceDiagram
     
     Note over Client: Step 3: R - REQUEST (Client accepts Server 1)
     Client->>Server1: DHCPREQUEST (Broadcast: ServerID = 192.168.1.1, RequestIP = 192.168.1.100)
-    Client->>Server2: DHCPREQUEST (Server 2 sees it was not chosen; frees 192.168.1.200!)
+    Client->>Server2: DHCPREQUEST (Server 2 sees it was not chosen, frees 192.168.1.200!)
     
     Note over Server1: Step 4: A - ACKNOWLEDGE (Commit Lease)
     Server1-->>Client: DHCPACK (yiaddr: 192.168.1.100, Mask: /24, GW: 192.168.1.1, Lease: 86400s)
@@ -1692,10 +1692,10 @@ flowchart LR
 In a connection-oriented virtual circuit network, when an intermediate node's buffers fill beyond a threshold, it tells its immediate upstream neighbor to slow down. That neighbor buffers packets and in turn tells its upstream neighbor to slow down, propagating the backpressure link-by-link back to the originating host.
 
 ```mermaid
-flowchart LR
-    SRC["Source Host"] <==|"(3) Slow Down!"| SW1["Switch 1"]
-    SW1 <==|"(2) Slow Down!"| SW2["Switch 2"]
-    SW2 <==|"(1) Buffers Full! Slow Down!"| SW3["Congested Switch 3"]
+flowchart RL
+    SW3["Congested Switch 3"] -->|"(1) Buffers Full! Slow Down!"| SW2["Switch 2"]
+    SW2 -->|"(2) Slow Down!"| SW1["Switch 1"]
+    SW1 -->|"(3) Slow Down!"| SRC["Source Host"]
 ```
 
 ---
