@@ -22,6 +22,12 @@ Repository containing study notes, question banks, university exam preparation m
 ├── UNIT - 3/
 │   ├── questions.md                    # Unit 3 question bank
 │   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 47 Mermaid diagrams
+├── UNIT - 4/
+│   ├── questions.md                    # Unit 4 question bank
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 29 Mermaid diagrams
+├── UNIT - 5/
+│   ├── questions.md                    # Unit 5 question bank
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 24 Mermaid diagrams
 ├── .agents/rules/
 │   └── exam_answers_style.md           # 16-mark long answers academic style rule
 ├── AGENTS.md                           # Global agent behavior & repository standards
@@ -106,5 +112,116 @@ Available in: [UNIT - 3/long_questions_answers.md](UNIT%20-%203/long_questions_a
    - *BGP (RFC 4271)*: Path Vector inter-domain routing between Autonomous Systems, AS-PATH loop immunity, peering over TCP Port 179, and eBGP vs. iBGP.
    - Master Comparison Matrix: 10-parameter evaluation across all 6 companion protocols.
 
+---
 
+## 📖 Unit 4 Coverage (Transport Layer Protocols & Services)
 
+### 📑 16-Mark Long Questions Master Guide
+Available in: [UNIT - 4/long_questions_answers.md](UNIT%20-%204/long_questions_answers.md)
+1. **Duties of the Transport Layer**:
+   - Architectural placement (OSI vs. TCP/IP) as the critical software-to-hardware boundary and liaison.
+   - Process-to-Process delivery scope vs. Host-to-Host (IP) vs. Hop-to-Hop (Data Link).
+   - Port number mechanisms and IANA allocations (Well-Known 0–1023, Registered 1024–49151, Ephemeral 49152–65535) and 5-tuple connection identifier.
+   - Multiplexing at sender and demultiplexing at receiver (connectionless 2-tuple vs. connection-oriented 4-tuple).
+   - End-to-end flow control (sliding window buffer management vs. link flow control).
+   - End-to-end error control (checksums, sequence numbers, cumulative ACKs, duplicate suppression, out-of-order buffering).
+   - Congestion control principles (detecting loss/delay, network core protection, $cwnd$).
+   - Master comparison matrix: Transport Layer vs. Network Layer vs. Data Link Layer (10 parameters).
+2. **User Datagram Protocol (UDP)**:
+   - Design philosophy (RFC 768), minimalist overhead, stateless operation, un-throttled rate, message-oriented record preservation.
+   - Bit-level 8-byte header format: Source Port (16b), Destination Port (16b), Length (16b), Checksum (16b).
+   - UDP 12-byte IPv4 / 40-byte IPv6 Pseudo-Header layout and 1's complement checksum arithmetic walkthrough.
+   - Complete step-by-step numerical checksum computation and verification trace with hexadecimal words.
+   - Prominent applications (DNS :53, DHCP :67/68, TFTP :69, NTP :123, SNMP :161, RIP :520, RTP :5004, QUIC :443).
+   - Vulnerabilities (IP spoofing, DNS amplification attacks) and mitigations (BCP 38 ingress filtering, Response Rate Limiting).
+   - Master comparison matrix: UDP vs. TCP vs. Raw IP (14 parameters).
+3. **Transmission Control Protocol (TCP)**:
+   - Design philosophy (RFC 793, RFC 9293) and reliable full-duplex byte-stream virtual circuit abstraction.
+   - Exhaustive 20–60 byte segment header bit breakdown (Seq Num, Ack Num, Data Offset, Flags [URG, ACK, PSH, RST, SYN, FIN, ECE, CWR], Window Size, Checksum, Urgent Pointer, Options: MSS, Window Scale, SACK, Timestamps).
+   - Connection management: 3-way handshake (`SYN` $	o$ `SYN+ACK` $	o$ `ACK`), SYN flood vulnerability and cryptographic SYN Cookie defense.
+   - Connection teardown: 4-way handshake (`FIN` $	o$ `ACK` $	o$ `FIN` $	o$ `ACK`), half-close state, `TIME_WAIT` state and $2	imes	ext{MSL}$ rationale.
+   - Complete 11-state TCP Finite State Machine (FSM) state diagram.
+   - Flow control sliding window dynamics; Silly Window Syndrome mitigations: Sender-side **Nagle's Algorithm** (RFC 896) vs. Receiver-side **Clark's Solution** (RFC 813).
+   - Congestion control: Slow Start ($CWND$ exponential doubling), Congestion Avoidance (additive increase $+1	ext{ MSS}$/RTT), Fast Retransmit (3 duplicate ACKs), and Fast Recovery (**TCP Tahoe vs. TCP Reno**).
+   - Error control and dynamic RTT estimation: **Jacobson's algorithm** ($SRTT$, $RTTVAR$, $RTO = SRTT + 4 	imes RTTVAR$) with numerical walkthrough, and **Karn's algorithm** for retransmissions.
+4. **Stream Control Transmission Protocol (SCTP)**:
+   - Historical motivation and IETF SIGTRAN roots (RFC 4960) for carrier-grade telephony signaling (SS7 over IP).
+   - Two core architectural breakthroughs:
+     - **Multi-Homing**: Binding multiple IP addresses to a single association, primary path transmission with automatic, transparent failover via heartbeat probes.
+     - **Multi-Streaming**: Up to 65,536 independent streams per association, completely eliminating TCP Head-of-Line (HoL) blocking.
+     - Message-oriented framing preserving application record boundaries.
+   - Packet and Chunk architecture: 12-byte Common Header (Source/Dest Port, Verification Tag, 32-bit CRC-32c checksum) and control/data chunks (`INIT`, `INIT_ACK`, `COOKIE_ECHO`, `COOKIE_ACK`, `DATA`, `SACK`, `HEARTBEAT`, `SHUTDOWN`).
+   - DATA chunk layout: TSN, Stream ID, Stream Sequence Number (SSN), U/B/E fragmentation flags, PPID.
+   - Association lifecycle: 4-way handshake with cryptographic **State Cookie** (inherent immunity against SYN flood memory exhaustion attacks), and 3-way graceful association teardown.
+   - Master comparison matrix: TCP vs. UDP vs. SCTP (12 parameters).
+5. **TCP Services & Core Mechanics (Covers Q5–Q11)**:
+   - Comprehensive ten-pillar architecture of TCP transport services.
+   - Process-to-process delivery, stream delivery with circular send/receive ring buffers, MSS chunking.
+   - Full-duplex communication and piggybacked acknowledgments.
+   - 4-tuple socket demultiplexing supporting high-concurrency server daemons.
+   - Connection-oriented stateful session tracking (TCB records).
+   - Reliable delivery and error recovery services (cumulative ACKs, SACK RFC 2018, duplicate suppression, out-of-order reordering).
+   - Flow control with Advertised Window ($rwnd$) and Zero Window probing via persistence timer.
+   - Congestion control service via AIMD and rate adaptation.
+   - Quality of service, priority, out-of-band data (`URG`), and immediate buffer flushing (`PSH`).
+   - Mathematical formulations: Bandwidth-Delay Product ($BDP = \text{Bandwidth} \times RTT$), TCP Window Scale option ($2^{16} \to 2^{30}$ bytes), and sliding window protocol efficiency ($\eta = \min(1, \frac{W}{1+2a})$) with step-by-step numerical examples.
+   - Master comparison matrix: Byte-Stream Service (TCP) vs. Message-Oriented Service (UDP / SCTP).
+
+---
+
+## 📖 Unit 5 Coverage (Application Layer Protocols & Architectures)
+
+### 📑 16-Mark Long Questions Master Guide
+Available in: [UNIT - 5/long_questions_answers.md](UNIT%20-%205/long_questions_answers.md)
+1. **HyperText Transfer Protocol (HTTP)**:
+   - Universal web architecture, statelessness, and request-response lifecycle.
+   - Request methods (GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH, CONNECT) and 5-tier status code taxonomy (1xx–5xx).
+   - Plaintext message framing: Request Line, Status Line, and RFC 5322 CRLF delimiters.
+   - Architectural evolution: Non-persistent HTTP/1.0 (2 RTT per object), Persistent HTTP/1.1 (Keep-Alive, pipelining, and application HoL blocking), HTTP/2 (Binary Framing Layer, multiplexed streams, stream prioritization, HPACK compression, Server Push), and HTTP/3 (QUIC over UDP, zero transport HoL blocking, 0-RTT/1-RTT handshakes, connection migration).
+   - Web caching mechanics, conditional GET validators (`ETag` / `Last-Modified`), and stateful cookie management (RFC 6265).
+   - Master comparison matrix: HTTP/1.0 vs. HTTP/1.1 vs. HTTP/2 vs. HTTP/3 (10 parameters).
+2. **Simple Mail Transfer Protocol (SMTP)**:
+   - Electronic mail framework: Mail User Agent (MUA), Mail Submission Agent (MSA :587), Mail Transfer Agent (MTA :25), Mail Delivery Agent (MDA), and physical mailbox spools.
+   - Three-phase interactive dialogue: Session Handshake (`HELO`/`EHLO`), Mail Transfer Dialogue (`MAIL FROM:`, `RCPT TO:`, `DATA`), and Graceful Teardown (`QUIT`).
+   - Multipurpose Internet Mail Extensions (MIME - RFC 2045–2049) overcoming 7-bit ASCII constraints.
+   - Step-by-step mathematical Base64 encoding walkthrough: 24-bit splitting, 6-bit grouping, alphabet lookup, and padding mechanics.
+   - Modern anti-spoofing and security frameworks: SPF DNS TXT records, DKIM cryptographic signatures, DMARC policies, and opportunistic STARTTLS encryption.
+   - Master comparison matrix: SMTP vs. POP3 vs. IMAP4 (7 parameters).
+3. **File Transfer Protocol (FTP)**:
+   - Out-of-band dual-connection architecture (RFC 959): Persistent Control Connection (TCP :21) vs. Ephemeral Data Connection (TCP :20 / ephemeral).
+   - Active FTP Mode (`PORT`) mechanics and why client-side firewalls/NAT drop unsolicited inbound server connections.
+   - Passive FTP Mode (`PASV`) mechanics resolving NAT traversal by having clients initiate outbound data connections.
+   - Data representations (ASCII, Image/Binary, EBCDIC), file structures (File, Record, Page), and transmission modes (Stream, Block, Compressed).
+   - Core command/response vocabulary and secure alternatives (FTPS over TLS vs. SFTP over SSH).
+   - Master comparison matrix: Active FTP vs. Passive FTP vs. TFTP (8 parameters).
+4. **Domain Name System (DNS)**:
+   - Hierarchical naming tree: Root (`.`), Generic and Country-Code TLDs, Second-Level Domains, Subdomains, FQDNs, and administrative zones.
+   - Comprehensive resolution mechanics: Client-to-Resolver Recursive resolution vs. Resolver-to-Hierarchy Iterative resolution.
+   - Fixed 12-byte header bit layout (ID, QR, Opcode, AA, TC, RD, RA, RCODE, record counts).
+   - Complete Resource Record (RR) taxonomy: `A`, `AAAA`, `CNAME`, `MX`, `NS`, `PTR`, `SOA`, and `TXT`.
+   - Dual-transport rationale: UDP Port 53 (queries < 512 bytes) vs. TCP Port 53 (zone transfers and large responses when `TC=1`).
+   - Vulnerabilities (Kaminsky cache poisoning, amplification attacks) and DNSSEC cryptographic protection.
+5. **Post Office Protocol Version 3 (POP3)**:
+   - Architectural role as a pull-based store-and-forward mail access protocol (TCP :110 / :995).
+   - Three-state lifecycle finite state machine: **Authorization State** (`USER`, `PASS`, `APOP`), **Transaction State** (`STAT`, `LIST`, `RETR`, `DELE`, `NOOP`, `RSET`), and **Update State** (`QUIT` unlinking marked messages).
+   - Operational modes: Download-and-Delete vs. Download-and-Keep.
+   - Server status indicators (`+OK` / `-ERR`) and full session transcript walkthrough.
+   - Architectural limitations and comprehensive comparison matrix: POP3 vs. IMAP4 (8 parameters).
+6. **TELNET (Teletype Network)**:
+   - ARPANET remote timesharing foundations and the Network Virtual Terminal (NVT) character/newline abstraction (RFC 854).
+   - In-band signaling and the Interpret As Command (`IAC` = `0xFF`) escape byte mechanism.
+   - Symmetric 4-verb option negotiation: `WILL`, `WONT`, `DO`, `DONT`, subnegotiation (`SB`/`SE`), and loop prevention.
+   - Common negotiated options: Echo, Suppress Go Ahead, NAWS (terminal window size).
+   - Plaintext credentials and packet-sniffing vulnerabilities leading to complete deprecation.
+7. **Secure Shell (SSH)**:
+   - Layered architecture (RFC 4251–4254): SSH Transport Layer, SSH User Authentication Layer, SSH Connection Layer on TCP Port 22.
+   - Ephemeral Diffie-Hellman cryptographic handshake and mathematical session key derivation ($K = g^{xy} mod p$).
+   - Host key authenticity verification (`~/.ssh/known_hosts`) and client authentication (Ed25519/RSA public keys, passwords).
+   - SSH Port Forwarding / Tunneling: Local (`-L`), Remote (`-R`), and Dynamic SOCKS5 (`-D`) proxy mechanics.
+   - Master comparison matrix: TELNET vs. SSH (10 parameters).
+8. **Difference between HTTP and HTTPS**:
+   - Architectural comparison: HTTP directly over TCP (:80) vs. HTTPS with TLS cryptographic sublayer (:443).
+   - TLS Handshake lifecycle: Cipher suite negotiation, X.509 CA certificate verification, key exchange, symmetric session encryption (AES-GCM / ChaCha20).
+   - Confidentiality, integrity, and authentication guarantees.
+   - Performance impacts (TLS 1.3 1-RTT/0-RTT optimization, hardware AES-NI acceleration) and web browser security standards.
+   - Master comparison matrix: HTTP vs. HTTPS (10 parameters).
