@@ -25,14 +25,14 @@ print(f"Generating Unit 3 figures in: {OUTPUT_DIR}")
 def generate_headers():
     # 1. IPv4 Packet Header (20-60 bytes)
     ipv4_rows = [
-        [("Version (4)", 4, "type", "4b (0100)"),
-         ("IHL", 4, "length", "4b (Header len in 32b words)"),
-         ("DSCP / ToS", 6, "control", "6b (DiffServ)"),
-         ("ECN", 2, "control", "2b (Congestion)"),
-         ("Total Length", 16, "length", "16 Bits (Header + Data in Octets)")],
-        [("Identification (ID)", 16, "seq", "16 Bits (Unique Fragment Identifier)"),
-         ("Flags (0 D M)", 3, "flag", "3b (DF, MF)"),
-         ("Fragment Offset", 13, "meta", "13 Bits (Offset in 8-byte units)")],
+        [("Version", 4, "type", "4b (IPv4)"),
+         ("IHL", 4, "length", "4b (Words)"),
+         ("DSCP", 6, "control", "6b (ToS)"),
+         ("ECN", 2, "control", "2b"),
+         ("Total Length", 16, "length", "16 Bits (Header + Data Octets)")],
+        [("Identification (ID)", 16, "seq", "16 Bits (Fragment Identifier)"),
+         ("Flags", 3, "flag", "3b (DF, MF)"),
+         ("Fragment Offset", 13, "meta", "13 Bits (8-Byte Units)")],
         [("Time to Live (TTL)", 8, "control", "8 Bits (Hop Limit)"),
          ("Protocol", 8, "type", "8 Bits (TCP:6, UDP:17, ICMP:1)"),
          ("Header Checksum", 16, "checksum", "16 Bits (1's Complement sum)")],

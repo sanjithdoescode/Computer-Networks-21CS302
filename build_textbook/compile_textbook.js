@@ -27,6 +27,7 @@ marked.setOptions({
  */
 function processMathAndMarkdown(mdContent, unitNum, figCounterState) {
   const mathTokens = [];
+  const figTokens = [];
   
   // 1. Extract Display Math: $$ ... $$
   let processed = mdContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
@@ -42,7 +43,35 @@ function processMathAndMarkdown(mdContent, unitNum, figCounterState) {
     return token;
   });
 
-  // 3. Process Mermaid Diagrams
+  // 3. Extract Vector SVG Figures into tokens
+  processed = processed.replace(/!\[(.*?)\]\((?:figures\/)?([^)]+\.svg)\)/g, (match, caption, filename) => {
+    figCounterState.count++;
+    const figNum = figCounterState.count;
+    const token = `@@@FIGURE_TOKEN_${figTokens.length}@@@`;
+    const svgPath = path.join(projectRoot, `UNIT - ${unitNum}`, "figures", filename);
+    let htmlContent = "";
+    if (fs.existsSync(svgPath)) {
+      let svg = fs.readFileSync(svgPath, "utf8");
+      svg = svg.replace(/<\?xml[\s\S]*?\?>/i, "");
+      svg = svg.replace(/<!DOCTYPE[\s\S]*?>/i, "");
+      
+      let formattedCaption = caption;
+      const figPrefixMatch = caption.match(/^(Figure\s+\d+\.\d+:?)\s*(.*)$/i);
+      if (figPrefixMatch) {
+        formattedCaption = `<strong>${figPrefixMatch[1]}</strong> ${figPrefixMatch[2]}`;
+      } else {
+        formattedCaption = `<strong>Figure ${unitNum}.${figNum}:</strong> ${caption}`;
+      }
+      htmlContent = `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption>${formattedCaption}</figcaption>\n</figure>\n\n`;
+    } else {
+      console.warn(`Warning: SVG not found at ${svgPath}`);
+      htmlContent = `\n\n<div class="callout callout-warning">Figure not found: ${filename}</div>\n\n`;
+    }
+    figTokens.push({ token, html: htmlContent });
+    return `\n\n${token}\n\n`;
+  });
+
+  // Fallback: Process any remaining Mermaid Diagrams (if any)
   processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
     const trimmed = code.trim();
     const hash = crypto.createHash("md5").update(trimmed).digest("hex");
@@ -50,9 +79,9 @@ function processMathAndMarkdown(mdContent, unitNum, figCounterState) {
     
     figCounterState.count++;
     const figNum = figCounterState.count;
+    const token = `@@@FIGURE_TOKEN_${figTokens.length}@@@`;
     let caption = `Architectural flow and protocol state dynamics`;
 
-    // Attempt to deduce caption from first line of mermaid code or subgraph
     const titleMatch = trimmed.match(/subgraph\s+[A-Za-z0-9_]+\["([^"]+)"\]/) ||
                        trimmed.match(/title\s+([^\n]+)/) ||
                        trimmed.match(/accTitle:\s*([^\n]+)/);
@@ -65,14 +94,17 @@ function processMathAndMarkdown(mdContent, unitNum, figCounterState) {
       }
     }
 
+    let htmlContent = "";
     if (info && fs.existsSync(path.join(diagramsDir, info.svgPath))) {
       let svg = fs.readFileSync(path.join(diagramsDir, info.svgPath), "utf8");
-      // Strip XML declaration if present
       svg = svg.replace(/<\?xml[\s\S]*?\?>/i, "");
-      return `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption><strong>Figure ${unitNum}.${figNum}:</strong> ${caption}</figcaption>\n</figure>\n\n`;
+      svg = svg.replace(/<!DOCTYPE[\s\S]*?>/i, "");
+      htmlContent = `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption><strong>Figure ${unitNum}.${figNum}:</strong> ${caption}</figcaption>\n</figure>\n\n`;
     } else {
-      return `\n\n<div class="callout callout-warning">Diagram ${unitNum}.${figNum} (Rendering placeholder)</div>\n\n`;
+      htmlContent = `\n\n<div class="callout callout-warning">Diagram ${unitNum}.${figNum} (Rendering placeholder)</div>\n\n`;
     }
+    figTokens.push({ token, html: htmlContent });
+    return `\n\n${token}\n\n`;
   });
 
   // 4. Process GitHub-style Alert Callouts
@@ -108,6 +140,12 @@ function processMathAndMarkdown(mdContent, unitNum, figCounterState) {
     } catch (err) {
       html = html.replace(item.token, `<code>${item.formula}</code>`);
     }
+  }
+
+  // 6.5. Restore Figures safely
+  for (const item of figTokens) {
+    html = html.replace(new RegExp(`<p>\\s*${item.token}\\s*<\\/p>`, 'g'), item.html);
+    html = html.replace(new RegExp(item.token, 'g'), item.html);
   }
 
   // 7. Enhance ASCII packet layouts
@@ -156,19 +194,47 @@ function processShortQuestions(mdContent) {
     return token;
   });
 
+  const figTokens = [];
   let shortFigCount = 0;
+  processed = processed.replace(/!\[(.*?)\]\((?:figures\/)?([^)]+\.svg)\)/g, (match, caption, filename) => {
+    shortFigCount++;
+    const token = `@@@SHORT_FIG_${figTokens.length}@@@`;
+    const svgPath = path.join(projectRoot, "UNIT - 1", "figures", filename);
+    let htmlContent = "";
+    if (fs.existsSync(svgPath)) {
+      let svg = fs.readFileSync(svgPath, "utf8");
+      svg = svg.replace(/<\?xml[\s\S]*?\?>/i, "");
+      svg = svg.replace(/<!DOCTYPE[\s\S]*?>/i, "");
+      let formattedCaption = caption;
+      const figPrefixMatch = caption.match(/^(Figure\s+1\.S\d+:?)\s*(.*)$/i);
+      if (figPrefixMatch) {
+        formattedCaption = `<strong>${figPrefixMatch[1]}</strong> ${figPrefixMatch[2]}`;
+      } else {
+        formattedCaption = `<strong>Figure 1.S${shortFigCount}:</strong> ${caption}`;
+      }
+      htmlContent = `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption>${formattedCaption}</figcaption>\n</figure>\n\n`;
+    }
+    figTokens.push({ token, html: htmlContent });
+    return `\n\n${token}\n\n`;
+  });
+
+  // Fallback Mermaid
   processed = processed.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
     const trimmed = code.trim();
     const hash = crypto.createHash("md5").update(trimmed).digest("hex");
     const info = manifest[hash];
     shortFigCount++;
+    const token = `@@@SHORT_FIG_${figTokens.length}@@@`;
 
+    let htmlContent = "";
     if (info && fs.existsSync(path.join(diagramsDir, info.svgPath))) {
       let svg = fs.readFileSync(path.join(diagramsDir, info.svgPath), "utf8");
       svg = svg.replace(/<\?xml[\s\S]*?\?>/i, "");
-      return `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption><strong>Figure 1.S${shortFigCount}:</strong> Short Answer Concept Diagram</figcaption>\n</figure>\n\n`;
+      svg = svg.replace(/<!DOCTYPE[\s\S]*?>/i, "");
+      htmlContent = `\n\n<figure class="diagram-card">\n<div class="svg-container">\n${svg}\n</div>\n<figcaption><strong>Figure 1.S${shortFigCount}:</strong> Short Answer Concept Diagram</figcaption>\n</figure>\n\n`;
     }
-    return match;
+    figTokens.push({ token, html: htmlContent });
+    return `\n\n${token}\n\n`;
   });
 
   let html = marked.parse(processed);
@@ -183,6 +249,12 @@ function processShortQuestions(mdContent) {
     } catch (err) {
       html = html.replace(item.token, `<code>${item.formula}</code>`);
     }
+  }
+
+  // Restore Figures safely
+  for (const item of figTokens) {
+    html = html.replace(new RegExp(`<p>\\s*${item.token}\\s*<\\/p>`, 'g'), item.html);
+    html = html.replace(new RegExp(item.token, 'g'), item.html);
   }
 
   // Add short question badge to H2 headings
@@ -241,7 +313,7 @@ async function buildMasterBook() {
         <p class="cover-subtitle">Complete Question Bank, Architectural Blueprints & Exhaustive 16-Mark Solution Manual</p>
         <div class="cover-divider"></div>
         <p class="cover-desc">
-          An exhaustive, mathematically rigorous, bit-level textbook engineered for university semester-end and internal assessment examinations. Features 162 publication-grade vector architectural diagrams, bit-level packet layouts, and complete multi-parameter comparison matrices across all five curriculum units.
+          An exhaustive, mathematically rigorous, bit-level textbook engineered for university semester-end and internal assessment examinations. Features 163+ publication-grade vector architectural diagrams, bit-level packet layouts, and complete multi-parameter comparison matrices across all five curriculum units.
         </p>
         <div class="cover-standards">
           <div class="cover-standards-title">Authoritative Reference Textbooks</div>

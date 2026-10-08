@@ -96,11 +96,32 @@ def draw_32bit_packet_header(title, rows, output_path, total_bits=32, bit_ruler=
             safe_sub = html.escape(str(sublabel)) if sublabel else ""
             
             center_x = curr_x + w / 2.0
-            if sublabel:
-                svg.append(f'<text x="{center_x}" y="{curr_y + 19}" text-anchor="middle" font-size="12" font-weight="700" fill="{c_text}">{safe_name}</text>')
-                svg.append(f'<text x="{center_x}" y="{curr_y + 33}" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">{safe_sub}</text>')
+            if w < 35:
+                title_font = 8
+                sub_font = 7
+                show_sub = False
+            elif w < 65:
+                title_font = 9
+                sub_font = 7.5
+                show_sub = len(safe_sub) <= 10
+            elif w < 110:
+                title_font = 10
+                sub_font = 8.5
+                show_sub = True
+            elif w < 160:
+                title_font = 11
+                sub_font = 9
+                show_sub = True
             else:
-                svg.append(f'<text x="{center_x}" y="{curr_y + row_height/2.0 + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="{c_text}">{safe_name}</text>')
+                title_font = 12
+                sub_font = 10
+                show_sub = True
+
+            if sublabel and show_sub:
+                svg.append(f'<text x="{center_x}" y="{curr_y + 19}" text-anchor="middle" font-size="{title_font}" font-weight="700" fill="{c_text}">{safe_name}</text>')
+                svg.append(f'<text x="{center_x}" y="{curr_y + 33}" text-anchor="middle" font-size="{sub_font}" font-weight="500" fill="#475569">{safe_sub}</text>')
+            else:
+                svg.append(f'<text x="{center_x}" y="{curr_y + row_height/2.0 + 4}" text-anchor="middle" font-size="{title_font}" font-weight="700" fill="{c_text}">{safe_name}</text>')
                 
             curr_x += w
         curr_y += row_height

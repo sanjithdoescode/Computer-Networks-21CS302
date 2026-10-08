@@ -6,4 +6,6 @@ build_textbook/CLAUDE.md
 build_textbook/bun.lock*
 *.log
 .DS_Store
+__pycache__/
+*.pyc
 
