@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 124" width="100%" height="auto" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<rect x="10" y="10" width="800" height="104" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+<text x="410.0" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">IEEE 802.3 Ethernet Frame Format</text>
+<rect x="40" y="50" width="152.3529411764706" height="44" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+<text x="116.1764705882353" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Preamble (7 Octets)</text>
+<text x="116.1764705882353" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">7 Bytes (10101010...)</text>
+<rect x="192.3529411764706" y="50" width="21.764705882352942" height="44" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.2"/>
+<text x="203.23529411764707" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">SFD</text>
+<text x="203.23529411764707" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">1B (10101011)</text>
+<rect x="214.11764705882354" y="50" width="130.58823529411765" height="44" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="279.4117647058824" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Destination MAC Address</text>
+<text x="279.4117647058824" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">6 Bytes (48 Bits)</text>
+<rect x="344.7058823529412" y="50" width="130.58823529411765" height="44" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="410.00000000000006" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Source MAC Address</text>
+<text x="410.00000000000006" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">6 Bytes (48 Bits)</text>
+<rect x="475.2941176470589" y="50" width="43.529411764705884" height="44" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1.2"/>
+<text x="497.0588235294118" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">EtherType / Length</text>
+<text x="497.0588235294118" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">2 Bytes (e.g. 0x0800 IPv4)</text>
+<rect x="518.8235294117648" y="50" width="174.11764705882354" height="44" fill="#fef3c7" stroke="#fde68a" stroke-width="1.2"/>
+<text x="605.8823529411766" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Payload (46 to 1500 Octets)</text>
+<text x="605.8823529411766" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">MTU Data (Pad to 46B)</text>
+<rect x="692.9411764705883" y="50" width="87.05882352941177" height="44" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.2"/>
+<text x="736.4705882352941" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#6b21a8">FCS / CRC-32</text>
+<text x="736.4705882352941" y="83" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">4 Bytes (CRC Polynomial)</text>
+</svg>

@@ -11,11 +11,12 @@ Repository containing study notes, question banks, university exam preparation m
 > **Complete Solution Manual**: Eliminates the need for multiple textbooks or internet searching during exam preparation.
 > 
 > * **Front Matter**: Official Syllabus (CO1–CO5), 16-Mark University Exam Scoring Blueprint, and Hyperlinked Master Table of Contents.
-> * **Unit I**: 11 Short Questions (2/5 Marks) + 5 Long Essays (16 Marks) with 40 Diagrams.
-> * **Unit II**: 5 Long Essays (16 Marks) with 22 Diagrams.
-> * **Unit III**: 9 Long Essays (16 Marks) with 47 Diagrams.
-> * **Unit IV**: 5 Comprehensive Thematic Chapters covering all Q1–Q11 with 29 Diagrams.
-> * **Unit V**: 8 Long Essays (16 Marks) with 24 Diagrams.
+> * **Front Matter**: Official Syllabus (CO1–CO5), 16-Mark University Exam Scoring Blueprint, and Hyperlinked Master Table of Contents.
+> * **Unit I**: 11 Short Questions (2/5 Marks) + 5 Long Essays (16 Marks) with 40 Publication Figures.
+> * **Unit II**: 5 Long Essays (16 Marks) with 22 Publication Figures.
+> * **Unit III**: 9 Long Essays (16 Marks) with 47 Publication Figures.
+> * **Unit IV**: 5 Comprehensive Thematic Chapters covering all Q1–Q11 with 30 Publication Figures.
+> * **Unit V**: 8 Long Essays (16 Marks) with 24 Publication Figures.
 > * **Appendices**: Master Acronym Dictionary (75+ terms), Complete Port Numbers & Protocols Master Matrix, and Comprehensive Exam Formula Sheet.
 
 ---
@@ -25,25 +26,33 @@ Repository containing study notes, question banks, university exam preparation m
 ```
 ├── 5.Syllabus - CN.pdf                  # Official Course Syllabus & Curriculum
 ├── UNIT - 1/
+│   ├── figures/                        # Standalone publication-grade vector SVGs (40 figures)
 │   ├── short_questions.md              # 2-mark & 5-mark short questions
-│   ├── short_questions_answers.md      # Detailed solutions with diagrams and comparison tables
+│   ├── short_questions_answers.md      # Detailed solutions with vector figures
 │   ├── long_questions.md               # 16-mark essay questions
-│   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 29 Mermaid diagrams
+│   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 29 vector figures
 │   └── UNIT 1.pdf                      # Lecture slides and unit reference notes
 ├── UNIT - 2/
+│   ├── figures/                        # Standalone publication-grade vector SVGs (22 figures)
 │   ├── question.md                     # Unit 2 question bank
-│   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 22 Mermaid diagrams
+│   ├── long_questions_answers.md       # Comprehensive 4-5 page long answers with 22 vector figures
 │   ├── UNIT 2.pdf                      # Unit 2 reference notes
 │   └── UNIT 2 NOTES.pdf                # Supplementary unit notes
 ├── UNIT - 3/
+│   ├── figures/                        # Standalone publication-grade vector SVGs (47 figures)
 │   ├── questions.md                    # Unit 3 question bank
-│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 47 Mermaid diagrams
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 47 vector figures
 ├── UNIT - 4/
+│   ├── figures/                        # Standalone publication-grade vector SVGs (30 figures)
 │   ├── questions.md                    # Unit 4 question bank
-│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 29 Mermaid diagrams
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 30 vector figures
 ├── UNIT - 5/
+│   ├── figures/                        # Standalone publication-grade vector SVGs (24 figures)
 │   ├── questions.md                    # Unit 5 question bank
-│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 24 Mermaid diagrams
+│   └── long_questions_answers.md       # Comprehensive 4-5 page long answers with 24 vector figures
+├── scripts/
+│   ├── build_figures.py                # Master figure compiler & validation runner
+│   └── figures/                        # Reproducible D2, Python SVG & Graphviz generators
 ├── .agents/rules/
 │   └── exam_answers_style.md           # 16-mark long answers academic style rule
 ├── AGENTS.md                           # Global agent behavior & repository standards

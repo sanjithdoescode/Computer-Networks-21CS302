@@ -76,31 +76,13 @@
 
 The **Network Layer** sits at Layer 3 of the ISO-OSI 7-layer reference model and corresponds directly to the Internet Layer of the TCP/IP architecture. Its primary objective is to facilitate **end-to-end, host-to-host delivery** of individual packets across multiple independent, heterogeneous intermediate networks (subnets).
 
-```mermaid
-flowchart TD
-    subgraph DeliveryScopes["Hierarchical Delivery Scopes Across OSI Layers"]
-        direction TB
-        L4["Transport Layer (Layer 4): Process-to-Process Delivery<br/>(Port Addresses: 16-bit Sockets)"]
-        L3["Network Layer (Layer 3): Host-to-Host Delivery<br/>(Logical Addresses: 32-bit IPv4 / 128-bit IPv6)"]
-        L2["Data Link Layer (Layer 2): Hop-to-Hop / Node-to-Node Delivery<br/>(Physical Addresses: 48-bit MAC)"]
-        
-        L4 ===> L3 ===> L2
-    end
-```
+![Figure 3.1: Hierarchical Delivery Scopes Across OSI Layers](figures/fig3_01_delivery_scopes.svg)
 
 ### The Fundamental Distinction: Hop-to-Hop vs. Host-to-Host
 - The **Data Link Layer** is responsible only for delivering frames between two physically adjacent devices connected to the same physical medium (e.g., from Workstation A to Switch 1, or Router 1 to Router 2). It has no awareness of the overall network topology beyond the local link.
 - The **Network Layer** oversees the complete transmission trajectory from the original source host to the ultimate destination host. It selects multi-hop paths, handles intermediate protocol and MTU differences, and ensures packets reach networks thousands of miles away.
 
-```mermaid
-flowchart LR
-    SRC["Source Host A<br/>IP: 10.1.1.5"] -->|"Hop 1 (Frame)"| R1["Router 1"]
-    R1 -->|"Hop 2 (Frame)"| R2["Router 2"]
-    R2 -->|"Hop 3 (Frame)"| R3["Router 3"]
-    R3 -->|"Hop 4 (Frame)"| DST["Destination Host B<br/>IP: 172.16.8.20"]
-
-    SRC -.->|"Logical End-to-End Host-to-Host Packet Path"| DST
-```
+![Figure 3.2: Hop-by-Hop Link Delivery vs. Host-to-Host Network Delivery](figures/fig3_02_hop_vs_host_delivery.svg)
 
 ---
 
@@ -108,26 +90,7 @@ flowchart LR
 
 The duties of the Network Layer can be organized into seven core responsibilities:
 
-```mermaid
-flowchart TD
-    DUTIES["Core Duties of the Network Layer"]
-    
-    D1["1. Packetizing & Encapsulation"]
-    D2["2. Logical Addressing"]
-    D3["3. Routing (Path Determination)"]
-    D4["4. Forwarding (Switching)"]
-    D5["5. Fragmentation & Reassembly"]
-    D6["6. Error Handling & Diagnostics (ICMP)"]
-    D7["7. Quality of Service (QoS) & Congestion"]
-    
-    DUTIES --> D1
-    DUTIES --> D2
-    DUTIES --> D3
-    DUTIES --> D4
-    DUTIES --> D5
-    DUTIES --> D6
-    DUTIES --> D7
-```
+![Figure 3.3: Core Duties and Responsibilities of the Network Layer](figures/fig3_03_network_layer_duties.svg)
 
 ### Duty 1: Packetizing (Encapsulation and Decapsulation)
 - **Source Host Encapsulation**: Accepts a Transport Layer segment (from TCP or UDP), prepends an IP header containing source/destination logical addresses, protocol identifiers, and lifecycle controls, and forms a **Network Datagram (Packet)**. The Network Layer does not inspect or alter upper-layer data.
@@ -195,20 +158,7 @@ When network traffic exceeds available buffer capacity on intermediate links, qu
 
 A modern router is a specialized computing device designed to process and switch millions of packets per second.
 
-```mermaid
-flowchart LR
-    subgraph RouterArch["Internal Architecture of a High-Speed Router"]
-        direction LR
-        IN_PORT["Input Ports<br/>- Physical Termination<br/>- Framing & Decapsulation<br/>- LPM Table Lookup"]
-        SW_FABRIC["High-Speed Switching Fabric<br/>- Crossbar Matrix / Shared Memory<br/>- Moves packets: Input -> Output"]
-        OUT_PORT["Output Ports<br/>- Buffer Queuing<br/>- Scheduling (WFQ / FIFO)<br/>- Link Re-encapsulation"]
-        
-        IN_PORT --> SW_FABRIC --> OUT_PORT
-        
-        ROUT_PROC["Routing Processor (Control Plane)<br/>- Executes RIP, OSPF, BGP<br/>- Computes FIB Tables"]
-        ROUT_PROC -.->|"Updates FIB"| IN_PORT
-    end
-```
+![Figure 3.4: High-Speed Router Internal Architecture](figures/fig3_04_router_architecture.svg)
 
 ### Components:
 1. **Input Ports**: Terminate incoming physical links, verify data link frames, extract IP datagrams, and perform fast table lookups using specialized **Ternary Content Addressable Memory (TCAM)** hardware.
@@ -223,22 +173,7 @@ flowchart LR
 
 ## 1.4 Packet Fragmentation and Reassembly Process
 
-```mermaid
-flowchart TD
-    ORIG["Original IP Datagram<br/>Total Length = 4000 Bytes (20B Header + 3980B Payload)<br/>Identification = 7788, DF = 0, MF = 0, Offset = 0"]
-    
-    ROUTER["Router Outbound Interface: MTU = 1500 Bytes<br/>Maximum Data Payload per Fragment = 1480 Bytes (Multiple of 8)"]
-    
-    ORIG --> ROUTER
-    
-    F1["Fragment 1<br/>Header = 20B, Payload = 1480B<br/>Total Length = 1500<br/>ID = 7788, MF = 1, Offset = 0"]
-    F2["Fragment 2<br/>Header = 20B, Payload = 1480B<br/>Total Length = 1500<br/>ID = 7788, MF = 1, Offset = 185"]
-    F3["Fragment 3<br/>Header = 20B, Payload = 1020B<br/>Total Length = 1040<br/>ID = 7788, MF = 0, Offset = 370"]
-    
-    ROUTER --> F1
-    ROUTER --> F2
-    ROUTER --> F3
-```
+![Figure 3.5: IP Datagram MTU Fragmentation Process](figures/fig3_05_fragmentation_flow.svg)
 
 ### The Mathematics of Fragmentation
 1. **Payload Division Rule**: Every fragment's payload length must be an integer multiple of 8 bytes (because the Fragment Offset field measures offset in 8-byte units: $13\text{ bits} \implies 2^{13} \times 8 = 65,536\text{ bytes}$).
@@ -286,17 +221,7 @@ In 1981, **RFC 791** standardized **Classful Addressing**. To accommodate networ
 
 ## 2.2 Binary Structural Rules & Identification Mechanisms
 
-```mermaid
-flowchart TD
-    subgraph ClassfulBitPatterns["First-Octet Leading Bit Identification"]
-        direction TB
-        CA["Class A: Begins with '0' (0xxxxxxx) -> Range: 1.0.0.0 to 127.255.255.255"]
-        CB["Class B: Begins with '10' (10xxxxxx) -> Range: 128.0.0.0 to 191.255.255.255"]
-        CC["Class C: Begins with '110' (110xxxxx) -> Range: 192.0.0.0 to 223.255.255.255"]
-        CD["Class D: Begins with '1110' (1110xxxx) -> Range: 224.0.0.0 to 239.255.255.255 (Multicast)"]
-        CE["Class E: Begins with '1111' (1111xxxx) -> Range: 240.0.0.0 to 255.255.255.255 (Experimental)"]
-    end
-```
+![Figure 3.6: IPv4 Classful First-Octet Binary Identification](figures/fig3_06_classful_bit_patterns.svg)
 
 ### Binary Architecture Layout
 
@@ -319,19 +244,7 @@ Class E:  [ 1 1 1 1 | 28-bit Reserved for Experimental / Research Uses  ]
 
 ## 2.3 Comprehensive Analysis of Classes A, B, C, D, and E
 
-```mermaid
-flowchart TD
-    subgraph SpaceDistribution["IPv4 Total Address Space Allocation (4.3 Billion Addresses)"]
-        direction TB
-        CA["Class A: 50.0% of Total Space (2,147,483,648 Addresses)"]
-        CB["Class B: 25.0% of Total Space (1,073,741,824 Addresses)"]
-        CC["Class C: 12.5% of Total Space (536,870,912 Addresses)"]
-        CD["Class D (Multicast): 6.25% of Total Space (268,435,456 Addresses)"]
-        CE["Class E (Reserved): 6.25% of Total Space (268,435,456 Addresses)"]
-        
-        CA --- CB --- CC --- CD --- CE
-    end
-```
+![Figure 3.7: IPv4 Total Address Space Allocation Across Classes A–E](figures/fig3_07_space_distribution.svg)
 
 ### 1. Class A (Very Large Networks)
 - **First-Octet Rule**: First bit is permanently fixed to `0`. Binary range: `00000000` to `01111111` (Decimal: 0 to 127).
@@ -402,23 +315,7 @@ In any IP network, two host addresses within a subnet are permanently reserved:
 ### Private IP Address Blocks (RFC 1918)
 To conserve IPv4 addresses, the IETF allocated specific blocks for non-routable private intranets. These addresses cannot route over the public Internet; traffic must pass through Network Address Translation (NAT) gateways:
 
-```mermaid
-flowchart LR
-    subgraph PrivateLAN["Private Enterprise LAN (RFC 1918)"]
-        PC1["PC 1: 192.168.1.5"]
-        PC2["PC 2: 192.168.1.6"]
-        PC3["PC 3: 192.168.1.7"]
-    end
-    
-    NAT_RTR["Edge Router with NAT<br/>Translates Private IP -> Public IP"]
-    PUBLIC_IP["Public IP: 203.0.113.45"]
-    INTERNET(("Global Public Internet"))
-    
-    PC1 --> NAT_RTR
-    PC2 --> NAT_RTR
-    PC3 --> NAT_RTR
-    NAT_RTR --> PUBLIC_IP --> INTERNET
-```
+![Figure 3.8: RFC 1918 Private IP Address Blocks & NAT Boundary](figures/fig3_08_private_ip_blocks.svg)
 
 - **Class A Private Range**: `10.0.0.0` to `10.255.255.255` (1 single Class A network: `10.0.0.0/8`, 16.7 million IPs).
 - **Class B Private Range**: `172.16.0.0` to `172.31.255.255` (16 contiguous Class B networks: `172.16.0.0/12`, ~1 million IPs).
@@ -473,18 +370,7 @@ Where:
 - Each link $(u, v) \in E$ has a non-negative cost metric $c(u, v)$ reflecting propagation delay, dollar cost, inverse bandwidth, or administrative preference.
 - The objective of any routing algorithm is to compute the **least-cost path** between all pairs of nodes.
 
-```mermaid
-flowchart TD
-    ROUT_TECH["Routing and Loop-Prevention Methodologies"]
-    
-    DVR["1. Distance Vector Routing<br/>(Bellman-Ford Algorithm)<br/>Iterative, Distributed, Local Info"]
-    LSR["2. Link State Routing<br/>(Dijkstra's Algorithm)<br/>Global Topology, Fast Convergence"]
-    STP["3. Spanning Tree Protocol (IEEE 802.1D)<br/>Layer 2 Bridge Loop Elimination<br/>Elects Root Bridge & Blocks Redundant Ports"]
-    
-    ROUT_TECH --> DVR
-    ROUT_TECH --> LSR
-    ROUT_TECH --> STP
-```
+![Figure 3.9: Unicast Routing Protocols and Loop Prevention Taxonomy](figures/fig3_09_routing_taxonomy.svg)
 
 ---
 
@@ -500,12 +386,7 @@ Distance Vector Routing is a distributed, asynchronous routing architecture base
   3. The next router along that path (**Vector / Next Hop**).
 - Routers periodically transmit copies of their routing tables exclusively to their directly connected immediate neighbors.
 
-```mermaid
-flowchart LR
-    A((A)) ---|2| B((B))
-    B ---|3| C((C))
-    A ---|7| C
-```
+![Figure 3.10: Distance Vector Undirected Weighted Network Graph](figures/fig3_10_distance_vector_topology.svg)
 
 ### The Bellman-Ford Mathematical Formulation
 Let $D_x(y)$ be the cost of the least-cost path from node $x$ to node $y$. The relation is governed by the Bellman-Ford optimality equation:
@@ -518,12 +399,7 @@ Where the minimum is evaluated across all direct neighbors $v$ of node $x$, $c(x
 
 Consider a 4-node network: $A - B - C - D$, with unit link costs ($1$ hop each).
 
-```mermaid
-flowchart LR
-    NA((A)) ---|1| NB((B))
-    NB ---|1| NC((C))
-    NC ---|1| ND((D))
-```
+![Figure 3.11: Distance Vector Routing Table Convergence Iterations](figures/fig3_11_dv_convergence.svg)
 
 1. **Initialization**: Each router knows only the cost to its immediate physical neighbors; all other destinations are marked as $\infty$.
    - Router A table: $\{A:0, B:1, C:\infty, D:\infty\}$
@@ -542,17 +418,7 @@ flowchart LR
 ### The Count-to-Infinity Problem and Routing Loops
 The primary failure mode of Distance Vector Routing is its vulnerability to routing loops when a link fails, known as the **Count-to-Infinity Problem**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    Note over A,B: Link between A and B Fails! (Cost = Infinity)
-    Note over B: B detects A is unreachable.
-    Note over C: But C had previously advertised: "I can reach A with cost 2!"
-    B->>C: B sees C's old route and updates: D_B(A) = cost(B, C) + D_C(A) = 1 + 2 = 3!
-    C->>B: C hears B's cost is 3, updates: D_C(A) = cost(C, B) + D_B(A) = 1 + 3 = 4!
-    B->>C: B updates: D_B(A) = 1 + 4 = 5!
-    Note over A,B: Costs loop upward: 6, 7, 8, ... until reaching Infinity (16 in RIP)!
-```
+![Figure 3.12: The Count-to-Infinity Problem & Routing Loop Dynamic](figures/fig3_12_count_to_infinity.svg)
 
 #### Loop Mitigation Techniques:
 1. **Defining Infinity**: Set infinity to a small integer (in RIP, $\infty = 16$). This bounds the loop so it terminates after 16 iterations rather than cycling endlessly.
@@ -577,21 +443,7 @@ Link State Routing addresses the slow convergence and routing loops of Distance 
 4. **Reliable Flooding of LSPs**: The router floods the LSP out all interfaces. Intermediate routers store the LSP in their **Link State Database (LSDB)** and forward it to all other neighbors. Sequence numbers prevent duplicate processing, and the Age field decrements to eliminate stale routing information.
 5. **Shortest Path Computation (Dijkstra's Algorithm)**: Once every router has an identical LSDB, each router independently executes **Dijkstra's Algorithm**, treating itself as the root to construct a **Shortest Path Tree (SPT)** and generate its forwarding table.
 
-```mermaid
-flowchart TD
-    subgraph DijkstraCycle["Dijkstra's Algorithm Execution Flow"]
-        direction TB
-        INIT["1. Initialize Sets:<br/>Permanent Set S = {Source Node}<br/>Tentative Set Q = {All other nodes}<br/>Set D(v) = cost(Source, v)"]
-        FIND_MIN["2. Find node u in Q with minimum tentative distance D(u)"]
-        ADD_PERM["3. Move node u from Q into Permanent Set S"]
-        RELAX["4. Relax Neighbors of u:<br/>For each neighbor v in Q:<br/>If D(u) + cost(u, v) < D(v):<br/>D(v) = D(u) + cost(u, v)"]
-        CHECK{"5. Is Tentative Set Q Empty?"}
-        
-        INIT --> FIND_MIN --> ADD_PERM --> RELAX --> CHECK
-        CHECK -- No --> FIND_MIN
-        CHECK -- Yes --> DONE["Done: Shortest Path Tree (SPT) Formed!"]
-    end
-```
+![Figure 3.13: Dijkstra Link State Shortest Path Tree (SPT) Flowchart](figures/fig3_13_dijkstra_flow.svg)
 
 ### Advantages of Link State over Distance Vector:
 - **Instantaneous Convergence**: LSPs flood immediately without waiting for step-by-step neighbor table recalculations.
@@ -604,14 +456,7 @@ flowchart TD
 
 While Distance Vector and Link State operate at Layer 3, redundant physical links at the **Layer 2 Data Link Layer** create catastrophic vulnerabilities.
 
-```mermaid
-flowchart TD
-    subgraph LoopCatastrophe["Layer 2 Redundancy Disasters without STP"]
-        BS["1. Broadcast Storms<br/>Broadcast frames loop endlessly, consuming 100% bandwidth"]
-        MAC_INST["2. MAC Table Instability<br/>Switches constantly rewrite CAM tables as frames loop back"]
-        DUP_FRAME["3. Multiple Frame Copies<br/>End stations receive duplicate copies of the same unicast frame"]
-    end
-```
+![Figure 3.14: Layer 2 Redundancy Loop Disasters without Spanning Tree](figures/fig3_14_stp_loop_disasters.svg)
 
 Because Ethernet frame headers lack a Time-to-Live (TTL) field, a broadcast frame circulating in a physical switching loop will cycle indefinitely, causing a **Broadcast Storm** that crashes switch backplanes and saturates physical links.
 
@@ -619,20 +464,7 @@ Because Ethernet frame headers lack a Time-to-Live (TTL) field, a broadcast fram
 A **Spanning Tree** is an acyclic subgraph of a network that connects all vertices (switches) without containing any closed loops:
 $$\text{For } V \text{ vertices, a Spanning Tree contains exactly } (V - 1) \text{ edges}$$
 
-```mermaid
-flowchart TD
-    subgraph PhysicalLoop["Physical Network (Contains Redundant Loop)"]
-        SW_A["Switch A (Root Bridge)"] <===>|"Path Cost = 4"| SW_B["Switch B"]
-        SW_B <===>|"Path Cost = 4"| SW_C["Switch C"]
-        SW_C <===>|"Redundant Loop Link"| SW_A
-    end
-
-    subgraph LogicalSTP["Logical Topology via Spanning Tree Protocol"]
-        SWA["Switch A (Root Bridge)"] ---|"Forwarding"| SWB["Switch B"]
-        SWA ---|"Forwarding"| SWC["Switch C"]
-        SWB -.-|"BLOCKED PORT (Stops Loop!)"| SWC
-    end
-```
+![Figure 3.15: Spanning Tree Protocol (IEEE 802.1D) Physical vs. Logical Topology](figures/fig3_15_stp_spanning_tree.svg)
 
 ### The STP Convergence Algorithm (IEEE 802.1D)
 Switches continuously exchange specialized Layer 2 control packets called **Bridge Protocol Data Units (BPDUs)** to converge on a loop-free tree:
@@ -672,13 +504,7 @@ In wired Ethernet networks (IEEE 802.3), stations arbitrate media access using *
 
 However, CSMA/CD **cannot be implemented in wireless RF networks (IEEE 802.11 Wi-Fi)** for two fundamental physical reasons:
 
-```mermaid
-flowchart TD
-    subgraph WirelessLimitations["Physical Reasons CSMA/CD Fails Over Wireless Media"]
-        R1["1. Extreme Dynamic Signal Attenuation<br/>Transmitted signal power is 1,000,000 times (60 dB) stronger<br/>than incoming received signals at the local antenna.<br/>Transmitter drowns out any colliding signal!"]
-        R2["2. Local Collision Detection Does Not Equal Receiver Collision<br/>A collision only matters at the receiver's antenna.<br/>Sender cannot hear what is colliding at the destination!"]
-    end
-```
+![Figure 3.16: Physical Reasons Why CSMA/CD Fails in Wireless Networks](figures/fig3_16_wireless_csma_cd_fails.svg)
 
 1. **Extreme Dynamic Range Disparity**: A wireless transceiver's broadcast power is hundreds of thousands of times greater than the incoming signals it receives from distant nodes. If a station transmits, its local antenna is saturated by its own signal energy, making it impossible to detect a faint colliding transmission from another station.
 2. **Spatial Separation of Collisions**: A collision occurs at the **receiver's antenna**, not at the transmitter's antenna. A transmitting station cannot determine whether its signal collided with another waveform at a remote receiving station.
@@ -687,14 +513,7 @@ flowchart TD
 
 ## 4.2 The Hidden Terminal and Exposed Terminal Problems
 
-```mermaid
-flowchart LR
-    subgraph HiddenTerminalProblem["The Hidden Terminal Problem"]
-        direction LR
-        HA["Station A<br/>Range reaches B"] --->|"Transmits to B"| HB["Access Point B<br/>(COLLISION AT RECEIVER!)"]
-        HC["Station C<br/>Range reaches B"] --->|"Transmits to B"| HB
-    end
-```
+![Figure 3.17: The Hidden Terminal Problem in Wireless Networks](figures/fig3_17_hidden_terminal.svg)
 
 ### 1. The Hidden Terminal Problem
 - Consider three wireless stations positioned in a line: **Station A $\longleftrightarrow$ Access Point B $\longleftrightarrow$ Station C**.
@@ -707,19 +526,7 @@ flowchart LR
 
 ### 2. The Exposed Terminal Problem
 
-```mermaid
-flowchart LR
-    subgraph ExposedTerminalProblem["The Exposed Terminal Problem"]
-        direction LR
-        EA["Station A (Receiver)"]
-        EB["Station B (Transmitter to A)"]
-        EC["Station C (Wants to send to D)"]
-        ED["Station D (Receiver)"]
-        
-        EB -->|"Active Transmission"| EA
-        EC -.->|"Wants to Transmit"| ED
-    end
-```
+![Figure 3.18: The Exposed Terminal Problem in Wireless Networks](figures/fig3_18_exposed_terminal.svg)
 
 - Station B is transmitting data to Station A.
 - Station C wants to transmit data to Station D (where D is out of range of B).
@@ -732,14 +539,7 @@ flowchart LR
 
 Because collisions cannot be reliably detected, the 802.11 standard shifts the paradigm to **Collision Avoidance (CSMA/CA)**, built upon three operational pillars:
 
-```mermaid
-flowchart TD
-    subgraph ThreePillars["The 3 Pillars of CSMA/CA"]
-        P1["1. Interframe Spaces (IFS)<br/>Prioritizes access using strict physical time gaps"]
-        P2["2. Contention Window & Backoff<br/>Randomizes transmission delays to prevent simultaneous bursts"]
-        P3["3. Positive Acknowledgments (ACK)<br/>Confirms successful frame reception over lossy air"]
-    end
-```
+![Figure 3.19: The Three Foundational Pillars of CSMA/CA](figures/fig3_19_csmaca_three_pillars.svg)
 
 ### 1. Interframe Spaces (IFS)
 Stations must wait for the medium to remain continuously idle for an **Interframe Space (IFS)** before attempting transmission. Differing IFS durations enforce traffic priority:
@@ -780,23 +580,7 @@ Because the transmitter cannot detect collisions, every successfully received un
 
 To resolve the Hidden Terminal problem, IEEE 802.11 provides an optional 4-way control handshake utilizing **RTS (Request to Send)** and **CTS (Clear to Send)** frames.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Sender as Transmitting Station
-    participant Other as Overhearing Stations
-    participant AP as Access Point (Receiver)
-    
-    Note over Sender: Channel idle for DIFS + Backoff
-    Sender->>AP: 1. RTS (Request to Send - Duration = NAV)
-    Note over Other: Overhearing stations parse RTS Duration
-    Note over Other: Set Virtual Carrier Sense (NAV) Timer!
-    AP-->>Sender: 2. CTS (Clear to Send - Duration = Remaining NAV)
-    Note over Other: Stations in AP range hear CTS, update NAV!
-    Sender->>AP: 3. DATA Frame (Payload)
-    AP-->>Sender: 4. ACK Frame (Transmission Confirmed)
-    Note over Other: NAV timer expires, channel available again
-```
+![Figure 3.20: CSMA/CA 4-Way RTS/CTS Handshake & NAV Virtual Carrier Sensing](figures/fig3_20_rts_cts_nav.svg)
 
 ### The Mechanics of the Network Allocation Vector (NAV)
 1. **RTS Transmission**: The sender transmits an RTS frame containing a **Duration Value** specifying the total time required to transmit the pending data frame, the receiver's CTS, the final ACK, and the three intervening SIFS intervals:
@@ -809,40 +593,7 @@ sequenceDiagram
 
 ## 4.5 Complete CSMA/CA Protocol Execution Flowchart
 
-```mermaid
-flowchart TD
-    START["Station has a frame ready to transmit"] --> SENSE1{"Sense physical channel:<br/>Is medium idle?"}
-    
-    SENSE1 -- No (Busy) --> WAIT_BUSY["Wait until channel becomes idle"]
-    WAIT_BUSY --> WAIT_DIFS["Wait for full DIFS idle period"]
-    
-    SENSE1 -- Yes (Idle) --> WAIT_DIFS
-    
-    WAIT_DIFS --> SENSE2{"Did channel remain<br/>idle for entire DIFS?"}
-    SENSE2 -- No --> WAIT_BUSY
-    SENSE2 -- Yes --> PICK_CW["Select random backoff k in [0, CW - 1]"]
-    
-    PICK_CW --> COUNTDOWN{"Channel still idle?"}
-    COUNTDOWN -- Yes --> DEC_K["Decrement backoff counter k"]
-    DEC_K --> ZERO_CHECK{"Is k == 0?"}
-    
-    COUNTDOWN -- No (Busy) --> FREEZE["Freeze counter k until channel idle for DIFS"]
-    FREEZE --> COUNTDOWN
-    
-    ZERO_CHECK -- No --> COUNTDOWN
-    ZERO_CHECK -- Yes --> SEND_RTS["Send RTS frame (if enabled)"]
-    
-    SEND_RTS --> WAIT_CTS{"Received CTS<br/>within timeout?"}
-    WAIT_CTS -- No (Collision) --> DOUBLE_CW["Double CW: CW = min(2*CW, CWmax)<br/>Increment attempt counter"]
-    DOUBLE_CW --> RETRY_CHECK{"Exceeded max retries?"}
-    RETRY_CHECK -- Yes --> DROP["Drop frame & Report Error"]
-    RETRY_CHECK -- No --> PICK_CW
-    
-    WAIT_CTS -- Yes --> SEND_DATA["Wait SIFS and transmit DATA frame"]
-    SEND_DATA --> WAIT_ACK{"Received ACK<br/>within timeout?"}
-    WAIT_ACK -- No --> DOUBLE_CW
-    WAIT_ACK -- Yes --> SUCCESS["Transmission Successful!<br/>Reset CW = CWmin"]
-```
+![Figure 3.21: Complete CSMA/CA Protocol Execution Flowchart](figures/fig3_21_csmaca_execution_flow.svg)
 
 ---
 
@@ -937,18 +688,7 @@ The **Internet Protocol Version 4 (IPv4)**, standardized in 1981 via **RFC 791**
 ### Scenario:
 A host generates an IP datagram with a **Total Length of 4000 bytes** (20-byte IP header + 3980-byte data payload) with an assigned $\text{Identification} = \mathbf{54321}$. This packet must cross an intermediate link with an $\text{MTU} = \mathbf{1500\text{ bytes}}$.
 
-```mermaid
-flowchart TD
-    IN_PKT["Input IP Datagram<br/>Total Length = 4000B, Data = 3980B<br/>ID = 54321, DF = 0, MF = 0, Offset = 0"]
-    
-    FRAG_ENG["Router Fragmentation Engine<br/>Link MTU = 1500B -> Max Payload = 1480B (185 blocks of 8B)"]
-    
-    IN_PKT --> FRAG_ENG
-    
-    FRAG_ENG --> F1["Fragment 1<br/>Total Length: 1500B (20B Header + 1480B Data)<br/>ID = 54321, MF = 1, Fragment Offset = 0"]
-    FRAG_ENG --> F2["Fragment 2<br/>Total Length: 1500B (20B Header + 1480B Data)<br/>ID = 54321, MF = 1, Fragment Offset = 185"]
-    FRAG_ENG --> F3["Fragment 3<br/>Total Length: 1040B (20B Header + 1020B Data)<br/>ID = 54321, MF = 0, Fragment Offset = 370"]
-```
+![Figure 3.22: MTU Fragmentation and Offset Calculation Trace](figures/fig3_22_fragmentation_table.svg)
 
 ### Step-by-Step Calculation:
 1. **Determine Maximum Fragment Payload**:
@@ -975,19 +715,7 @@ flowchart TD
 
 ## 5.4 Subnetting, Supernetting, and CIDR Hierarchy
 
-```mermaid
-flowchart TD
-    subgraph SubnetDivision["Subnetting Mechanics: /24 Network Split into Two /25 Subnets"]
-        direction TB
-        NET["Original Class C Network: 192.168.10.0/24 (254 Usable Hosts)<br/>Mask: 255.255.255.0"]
-        
-        SUB1["Subnet 1: 192.168.10.0/25<br/>Mask: 255.255.255.128<br/>Usable Range: 192.168.10.1 - 192.168.10.126 (126 Hosts)<br/>Broadcast: 192.168.10.127"]
-        SUB2["Subnet 2: 192.168.10.128/25<br/>Mask: 255.255.255.128<br/>Usable Range: 192.168.10.129 - 192.168.10.254 (126 Hosts)<br/>Broadcast: 192.168.10.255"]
-        
-        NET -->|"Borrow 1 Host Bit"| SUB1
-        NET -->|"Borrow 1 Host Bit"| SUB2
-    end
-```
+![Figure 3.23: Class C Subnet Division and Range Allocations](figures/fig3_23_subnet_division.svg)
 
 ### Mathematical Subnetting Formulas
 When borrowing $s$ bits from the host field to create subnets:
@@ -1021,24 +749,7 @@ The massive proliferation of smartphones, home IoT devices, and cloud computing 
 
 The global Internet is organized into thousands of independently administered network domains called **Autonomous Systems (AS)**.
 
-```mermaid
-flowchart TD
-    subgraph InternetHierarchy["Autonomous System Routing Protocol Hierarchy"]
-        direction TB
-        
-        subgraph AS1["Autonomous System 100 (Enterprise ISP A)"]
-            direction LR
-            R1["Router A1"] <--->|"OSPF (Link State)"| R2["Router A2"]
-        end
-
-        subgraph AS2["Autonomous System 200 (Transit Carrier B)"]
-            direction LR
-            R3["Router B1"] <--->|"RIP / IS-IS"| R4["Router B2"]
-        end
-
-        AS1 <=====>|"BGP-4 (Path Vector EGP - Inter-AS Peering)"| AS2
-    end
-```
+![Figure 3.24: Autonomous System Hierarchy & Routing Taxonomy](figures/fig3_24_as_routing_hierarchy.svg)
 
 ### Definitions:
 - **Autonomous System (AS)**: A collection of IP networks and routers controlled by a single administrative entity (university, corporation, ISP) presenting a consistent, unified internal routing policy. Each public AS is assigned a unique globally registered **Autonomous System Number (ASN)** (e.g., ASN 15169 for Google).
@@ -1069,27 +780,7 @@ RIP (standardized in RFC 1058 for RIPv1, RFC 2453 for RIPv2) is an Interior Gate
 
 OSPF (RFC 2328 for OSPFv2, RFC 5340 for OSPFv3) is an open-standard, link-state Interior Gateway Protocol widely deployed in enterprise networks and campus backbones.
 
-```mermaid
-flowchart TD
-    subgraph OSPF_Hierarchy["Hierarchical Two-Tier OSPF Area Architecture"]
-        direction TB
-        
-        subgraph Area0["Backbone Area (Area 0 / 0.0.0.0)"]
-            CORE_R1["Core Router 1"] <---> CORE_R2["Core Router 2"]
-        end
-        
-        subgraph Area1["Standard Area 1 (Engineering)"]
-            IR1["Internal Router 1"] --- ABR1["Area Border Router (ABR 1)"]
-        end
-        
-        subgraph Area2["Standard Area 2 (Finance)"]
-            IR2["Internal Router 2"] --- ABR2["Area Border Router (ABR 2)"]
-        end
-        
-        ABR1 <===> CORE_R1
-        ABR2 <===> CORE_R2
-    end
-```
+![Figure 3.25: Two-Tier Hierarchical OSPF Area Architecture](figures/fig3_25_ospf_areas.svg)
 
 ### 1. Hierarchical Area Partitioning
 To scale to large enterprise networks without overwhelming routers with massive LSDBs, OSPF partitions an AS into **Areas**:
@@ -1112,17 +803,7 @@ $$\text{Cost} = \frac{\text{Reference Bandwidth}}{\text{Interface Bandwidth in b
 ### 3. OSPF Packet Types & Adjacency Formation
 OSPF runs directly on top of the **IP Layer (Protocol Number 89)** without transport-layer encapsulation.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Down
-    Down --> Init: Sends Hello Packet
-    Init --> TwoWay: Neighbor sees self in Hello (2-Way)
-    TwoWay --> ExStart: Elect Master/Slave & Sequence
-    ExStart --> Exchange: Exchange Database Descriptions (DBD)
-    Exchange --> Loading: Request missing LSAs via LSR / LSU
-    Loading --> Full: Database Synchronized (Full Adjacency)
-    Full --> [*]
-```
+![Figure 3.26: OSPF 7-State Neighbor Adjacency Lifecycle](figures/fig3_26_ospf_7state_fsm.svg)
 
 - **Five OSPF Packet Types**:
   1. *Type 1 (Hello)*: Discovers neighbors, establishes adjacencies, and maintains keepalives.
@@ -1147,23 +828,7 @@ To eliminate this $O(N^2)$ scaling issue, routers elect:
 
 **BGP-4** (RFC 4271) is the core routing protocol of the global Internet. It is a **Path Vector Protocol** designed to manage routing across independent Autonomous Systems.
 
-```mermaid
-flowchart LR
-    subgraph AS100["AS 100 (Google)"]
-        R_A["Border Router A"]
-    end
-
-    subgraph AS200["AS 200 (Transit ISP)"]
-        R_B["Border Router B"]
-    end
-
-    subgraph AS300["AS 300 (End User ISP)"]
-        R_C["Border Router C"]
-    end
-
-    R_A <===>|"eBGP Peering (TCP 179)<br/>Advertises Prefix: 8.8.8.0/24<br/>AS-PATH: [100]"| R_B
-    R_B <===>|"eBGP Peering (TCP 179)<br/>Advertises Prefix: 8.8.8.0/24<br/>AS-PATH: [200, 100]"| R_C
-```
+![Figure 3.27: BGP-4 Inter-Domain AS-PATH Route Propagation](figures/fig3_27_bgp_peering.svg)
 
 ### 1. The Path Vector Principle & AS-PATH Loop Elimination
 Unlike IGPs that track link costs or hop counts, BGP advertises reachable network prefixes paired with an ordered list of Autonomous Systems that traffic must traverse to reach the destination—the **AS-PATH Attribute**:
@@ -1217,17 +882,7 @@ In any TCP/IP network, a host cannot communicate over the Internet without prope
 - **Bootstrap Protocol (BOOTP - RFC 951)**: Introduced an Application Layer protocol running over UDP (Ports 67 and 68) that could cross routers using relay agents and deliver an IP address along with a boot filename and gateway. However, BOOTP was static: an administrator had to manually pre-populate a lookup table matching each device's MAC address to a fixed IP. It lacked dynamic address pooling and automatic lease reclamation.
 - **Dynamic Host Configuration Protocol (DHCP - RFC 2131)**: Standardized by the IETF to provide complete, automated, and dynamic network parameter configuration, supporting temporary address leasing, dynamic pooling, and seamless mobile roaming across subnets.
 
-```mermaid
-flowchart TD
-    EVOL["Evolution of Host IP Configuration Protocols"]
-    
-    MAN["1. Manual Configuration<br/>- Error-prone, static, high administrative burden<br/>- Frequent duplicate IP address conflicts"]
-    RARP["2. RARP (RFC 903 - Layer 2)<br/>- Resolves MAC to IP<br/>- Cannot cross routers, no gateway or DNS delivery"]
-    BOOTP["3. BOOTP (RFC 951 - UDP 67/68)<br/>- Traverses routers via Relay Agents<br/>- Static pre-configured 1:1 MAC-to-IP binding only"]
-    DHCP["4. DHCP (RFC 2131 - Modern Standard)<br/>- Dynamic IP Pooling, Temporary Leases<br/>- Distributes IP, Mask, Gateway, DNS, MTU automatically"]
-    
-    MAN --> RARP --> BOOTP --> DHCP
-```
+![Figure 3.28: Evolutionary Timeline of Host IP Configuration](figures/fig3_28_dhcp_evolution.svg)
 
 ---
 
@@ -1238,14 +893,7 @@ DHCP supports three distinct IP address allocation mechanisms:
 2. **Automatic Allocation**: The server assigns a permanent, static IP address from the pool to a requesting client upon its first connection. The address is never expired or reassigned to another host.
 3. **Manual / Static Reservation (MAC Binding)**: The network administrator configures a table on the DHCP server binding a specific hardware MAC address (e.g., `00:1A:2B:3C:4D:5E`) to a fixed reserved IP address (e.g., `192.168.1.10`). Whenever that machine requests an IP, the server always returns that exact IP (ideal for network printers, file servers, and management interfaces).
 
-```mermaid
-flowchart TD
-    subgraph DHCPAllocations["DHCP IP Allocation Modes"]
-        DYN["1. Dynamic Allocation<br/>Temporary Lease from Pool (Hours/Days)<br/>Reclaimed upon expiration or release"]
-        AUTO["2. Automatic Allocation<br/>Permanent unexpired assignment<br/>Allocated automatically on first connection"]
-        RES["3. Manual / Reservation<br/>Fixed binding: Static MAC <-> Fixed IP<br/>Used for Servers, Switches, Printers"]
-    end
-```
+![Figure 3.29: Three DHCP Address Allocation Modes](figures/fig3_29_dhcp_allocation_modes.svg)
 
 ### Essential Configuration Parameters Delivered to Clients
 A single DHCP transaction automatically distributes:
@@ -1330,29 +978,7 @@ DHCP operates as an Application Layer protocol encapsulated directly inside **UD
 
 When an unconfigured client joins a network, it obtains an IP configuration through the **DORA** transaction:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as DHCP Client (0.0.0.0:68)
-    participant Server1 as DHCP Server 1 (192.168.1.1:67)
-    participant Server2 as DHCP Server 2 (192.168.1.2:67)
-    
-    Note over Client: Step 1: D - DISCOVER (Broadcast)
-    Client->>Server1: DHCPDISCOVER (Src: 0.0.0.0:68 -> Dst: 255.255.255.255:67, xid=101)
-    Client->>Server2: DHCPDISCOVER (Broadcast heard by all local servers)
-    
-    Note over Server1,Server2: Step 2: O - OFFER (Propose IP)
-    Server1-->>Client: DHCPOFFER (yiaddr: 192.168.1.100, ServerID: 192.168.1.1)
-    Server2-->>Client: DHCPOFFER (yiaddr: 192.168.1.200, ServerID: 192.168.1.2)
-    
-    Note over Client: Step 3: R - REQUEST (Client accepts Server 1)
-    Client->>Server1: DHCPREQUEST (Broadcast: ServerID = 192.168.1.1, RequestIP = 192.168.1.100)
-    Client->>Server2: DHCPREQUEST (Server 2 sees it was not chosen, frees 192.168.1.200!)
-    
-    Note over Server1: Step 4: A - ACKNOWLEDGE (Commit Lease)
-    Server1-->>Client: DHCPACK (yiaddr: 192.168.1.100, Mask: /24, GW: 192.168.1.1, Lease: 86400s)
-    Note over Client: Client performs Gratuitous ARP: IP is conflict-free!
-```
+![Figure 3.30: DHCP 4-Step DORA Exchange Protocol Lifecycle](figures/fig3_30_dhcp_dora_lifecycle.svg)
 
 ### 1. D — DHCPDISCOVER
 - **Source IP**: `0.0.0.0` (Client has no IP).
@@ -1382,22 +1008,7 @@ sequenceDiagram
 
 A DHCP lease is governed by three critical time thresholds:
 
-```mermaid
-stateDiagram-v2
-    [*] --> Init: Client Boots
-    Init --> Selecting: Broadcasts DHCPDISCOVER
-    Selecting --> Requesting: Receives DHCPOFFER, sends DHCPREQUEST
-    Requesting --> Bound: Receives DHCPACK (Lease active!)
-    
-    Bound --> Renewing: Timer T1 (50% Lease) Expires<br/>Unicasts DHCPREQUEST to original server
-    Renewing --> Bound: Receives DHCPACK (Lease extended back to 100%!)
-    
-    Renewing --> Rebinding: Timer T2 (87.5% Lease) Expires<br/>No reply from original server! Broadcasts DHCPREQUEST
-    Rebinding --> Bound: Receives DHCPACK from ANY server
-    
-    Rebinding --> Init: Lease Expires (100%)<br/>Halts traffic, drops IP, restarts DORA
-    Bound --> Init: User disconnects (Sends DHCPRELEASE)
-```
+![Figure 3.31: DHCP Lease Renewal State Machine (T1, T2, Expire)](figures/fig3_31_dhcp_lease_renewal_fsm.svg)
 
 1. **Timer T1 (Renewal Timer - 50% of Lease)**:
    - Default value: $0.5 \times \text{Lease Duration}$ (e.g., at 12 hours of a 24-hour lease).
@@ -1419,28 +1030,7 @@ By default, routers are configured to block broadcast packets (`255.255.255.255`
 
 The solution is a **DHCP Relay Agent (RFC 1542 / RFC 2131)**, typically built directly into the local router interface:
 
-```mermaid
-flowchart LR
-    subgraph SubnetA["Subnet A: 192.168.10.0/24"]
-        CLIENT["DHCP Client<br/>MAC: 00:AA:BB:CC:DD:EE"]
-    end
-
-    subgraph EdgeRouter["Intermediate Edge Router (DHCP Relay Agent)"]
-        direction TB
-        INT_A["Interface G0/0: 192.168.10.1<br/>Config: ip helper-address 10.0.0.50"]
-        INT_WAN["Interface G0/1: 10.0.0.1"]
-        INT_A --- INT_WAN
-    end
-
-    subgraph CentralSubnet["Server Farm Subnet: 10.0.0.0/24"]
-        DHCPSRV[("Central Enterprise<br/>DHCP Server: 10.0.0.50")]
-    end
-
-    CLIENT -->|"1. Local Broadcast:<br/>Src: 0.0.0.0 Dst: 255.255.255.255"| INT_A
-    INT_A -->|"2. Unicast Forward:<br/>Sets giaddr = 192.168.10.1<br/>Src: 10.0.0.1 Dst: 10.0.0.50"| DHCPSRV
-    DHCPSRV -->|"3. Unicast Reply:<br/>Picks IP from 192.168.10.0 pool<br/>Dst: 10.0.0.1"| INT_WAN
-    INT_A -->|"4. Local Delivery to Client"| CLIENT
-```
+![Figure 3.32: Cross-Subnet DHCP Relay Agent Architecture](figures/fig3_32_dhcp_relay_agent.svg)
 
 ### Operational Steps of the Relay Agent:
 1. The client broadcasts a `DHCPDISCOVER` on Subnet A (`192.168.10.0/24`).
@@ -1483,29 +1073,12 @@ Because early DHCP protocols lacked authentication, dynamic networks face two pr
 
 In a packet-switched network, **Congestion** occurs when the aggregate volume of packets injected into the network approaches or exceeds the transmission capacity of intermediate communication links and the buffer capacity of intermediate routers.
 
-```mermaid
-flowchart TD
-    subgraph CongestionRootCauses["Root Causes of Network Congestion"]
-        C1["1. Packet Arrival Rate Exceeds Outgoing Link Bandwidth"]
-        C2["2. Slow Router Processors (Queue Processing Bottlenecks)"]
-        C3["3. Mismatched Link Capacities (e.g., 10 Gbps feeding into 100 Mbps)"]
-        C4["4. Buffer Exhaustion (Router queues overflow -> Packet Drops)"]
-    end
-```
+![Figure 3.33: Root Causes of Network Congestion Collapse](figures/fig3_33_congestion_causes.svg)
 
 ### The Congestion Collapse Phenomenon
 When input traffic load increases, network behavior passes through three distinct operating regimes:
 
-```mermaid
-flowchart LR
-    LOAD["Offered Load (Traffic Injected)"]
-    
-    Z1["Regime 1: Linear Growth<br/>Throughput = Offered Load<br/>Buffers absorb brief bursts, zero drops"]
-    Z2["Regime 2: The Knee<br/>Queues fill, delay increases exponentially<br/>Throughput increases sub-linearly"]
-    Z3["Regime 3: The Cliff<br/>Buffer Overflow -> Massive Packet Drops<br/>Retransmissions saturate links -> Throughput drops to near ZERO!"]
-    
-    LOAD --> Z1 --> Z2 --> Z3
-```
+![Figure 3.34: Network Congestion Dynamics: Throughput & Delay vs. Offered Load](figures/fig3_34_congestion_collapse_curve.svg)
 
 - **The Knee**: The point where queues begin to build up. Delay starts increasing exponentially while throughput gains flatten out.
 - **The Cliff**: The critical threshold where router buffers completely fill up. Arriving packets are dropped. Dropped packets trigger end-to-end transport layer retransmissions (e.g., TCP timeout retransmits). These retransmissions inject even more duplicate packets into already congested links, triggering a positive feedback spiral called **Congestion Collapse**, reducing effective goodput to near zero.
@@ -1516,24 +1089,7 @@ flowchart LR
 
 Congestion control mechanisms are broadly categorized into two structural paradigms:
 
-```mermaid
-flowchart TD
-    CONG_TAX["Congestion Control Taxonomy"]
-    
-    OPEN["1. Open-Loop Congestion Control<br/>(Preventative / Proactive)<br/>Design policies to prevent congestion before it occurs"]
-    CLOSED["2. Closed-Loop Congestion Control<br/>(Reactive / Feedback-Driven)<br/>Detect congestion dynamically & throttle transmission"]
-    
-    CONG_TAX --> OPEN
-    CONG_TAX --> CLOSED
-    
-    OPEN --> LB["Leaky Bucket Algorithm (Traffic Shaping)"]
-    OPEN --> TB["Token Bucket Algorithm (Traffic Policing)"]
-    OPEN --> POL["Protocol Policies (Window, Discard, Retransmit)"]
-    
-    CLOSED --> BP["Backpressure (Hop-by-Hop Throttling)"]
-    CLOSED --> CP["Choke Packets (Source Quench)"]
-    CLOSED --> ECN["Explicit Congestion Notification (ECN / RED)"]
-```
+![Figure 3.35: Open-Loop vs. Closed-Loop Congestion Control Taxonomy](figures/fig3_35_congestion_taxonomy.svg)
 
 ### 1. Open-Loop (Preventative) Control
 Policies implemented at the sender and intermediate nodes to ensure congestion never begins:
@@ -1551,24 +1107,7 @@ Mechanisms that monitor system performance, detect when queues reach critical th
 
 The **Leaky Bucket Algorithm** shapes bursty transmission streams into a completely smooth, uniform, constant-rate output flow, analogous to a bottom-perforated water bucket:
 
-```mermaid
-flowchart TD
-    subgraph LeakyBucketMechanics["The Leaky Bucket Algorithm"]
-        BURST["Bursty Input Traffic<br/>(Variable Arrival Rate: Packet Spikes)"]
-        
-        subgraph Bucket["Finite Capacity FIFO Buffer (Capacity = C Bytes)"]
-            WATER["Buffered Packets Queued in FIFO Memory"]
-        end
-        
-        DROP["Overflow Discarded!<br/>If Input > Capacity C"]
-        DRAIN["Leak at Constant Uniform Rate<br/>(Fixed Output Rate: r Bytes/sec)"]
-        SMOOTH["Smooth Constant Output Flow to Network"]
-        
-        BURST --> Bucket
-        Bucket -.->|"Queue Overflow"| DROP
-        Bucket --> DRAIN --> SMOOTH
-    end
-```
+![Figure 3.36: Leaky Bucket Traffic Shaping Algorithm](figures/fig3_36_leaky_bucket.svg)
 
 ### Operating Principles
 1. Packets generated by an application arrive at irregular, bursty intervals and enter a finite FIFO queue (the bucket) of capacity $C$ bytes.
@@ -1585,31 +1124,7 @@ flowchart TD
 
 The **Token Bucket Algorithm** addresses the rigidity of the leaky bucket by **allowing controlled bursts of high-speed traffic** while still enforcing an average transmission rate over time.
 
-```mermaid
-flowchart TD
-    subgraph TokenBucketMechanics["The Token Bucket Algorithm"]
-        direction TB
-        GEN["Token Generator<br/>Adds tokens at constant rate: r tokens/sec"]
-        
-        subgraph TokenPool["Token Bucket Storage (Capacity = C Tokens)"]
-            TOKENS["Stored Token Pool"]
-        end
-        
-        DISCARD_TOK["Excess Tokens Discarded<br/>(When Bucket Reaches Capacity C)"]
-        
-        GEN --> TokenPool
-        TokenPool -.->|"Bucket Full"| DISCARD_TOK
-        
-        PKT_IN["Incoming Data Packets<br/>(Bursty Traffic)"]
-        GATE{"Check Token Pool:<br/>Are enough tokens available?"}
-        
-        PKT_IN --> GATE
-        TokenPool --> GATE
-        
-        GATE -- Yes --> TRANSMIT["Remove k tokens from pool<br/>Transmit Packet immediately at link speed!"]
-        GATE -- No --> WAIT_DROP["Wait for tokens to accumulate<br/>or Drop / Tag as Low Priority"]
-    end
-```
+![Figure 3.37: Token Bucket Traffic Shaping with Burst Support](figures/fig3_37_token_bucket.svg)
 
 ### Operating Principles
 1. A token generator produces tokens at a constant rate of $r$ tokens per second and deposits them into a bucket with a finite capacity of $C$ tokens.
@@ -1678,25 +1193,12 @@ $$\text{Volume} = M \times T = 100\text{ MB/s} \times 0.0125\text{ s} = \mathbf{
 
 Closed-loop techniques dynamically detect congestion within the network fabric and throttle traffic sources:
 
-```mermaid
-flowchart LR
-    subgraph ClosedLoopMethods["Closed-Loop Congestion Feedback Approaches"]
-        direction TB
-        M1["1. Hop-by-Hop Backpressure: Congested node throttles immediate upstream node"]
-        M2["2. Choke Packets: Congested router generates ICMP packet directly to source"]
-        M3["3. Explicit Congestion Notification (ECN): Marks IP header bits; receiver echoes in ACK"]
-    end
-```
+![Figure 3.38: Closed-Loop Congestion Feedback Mechanisms](figures/fig3_38_closed_loop_methods.svg)
 
 ### 1. Hop-by-Hop Backpressure
 In a connection-oriented virtual circuit network, when an intermediate node's buffers fill beyond a threshold, it tells its immediate upstream neighbor to slow down. That neighbor buffers packets and in turn tells its upstream neighbor to slow down, propagating the backpressure link-by-link back to the originating host.
 
-```mermaid
-flowchart RL
-    SW3["Congested Switch 3"] -->|"(1) Buffers Full! Slow Down!"| SW2["Switch 2"]
-    SW2 -->|"(2) Slow Down!"| SW1["Switch 1"]
-    SW1 -->|"(3) Slow Down!"| SRC["Source Host"]
-```
+![Figure 3.39: Hop-by-Hop Backpressure Traffic Regulation](figures/fig3_39_backpressure_flow.svg)
 
 ---
 
@@ -1711,22 +1213,7 @@ A **Choke Packet** is a specialized control packet generated by a congested inte
 ### 3. Explicit Congestion Notification (ECN - RFC 3168)
 Modern networks implement **ECN**, which operates without dropping packets or generating extra choke traffic:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Sender as TCP Sender
-    participant Router as Congested Intermediate Router
-    participant Receiver as TCP Receiver
-    
-    Note over Sender: Transmits IP Packet with ECN = 10 (ECT: ECN Capable)
-    Sender->>Router: Data Packet (ECT=1, CE=0)
-    Note over Router: RED Queue reaches threshold!<br/>Marks ECN bits: CE = 11 (Congestion Experienced)
-    Router->>Receiver: Forwards Data Packet with CE = 11
-    Note over Receiver: Reads CE=11! Sets ECE flag in TCP ACK!
-    Receiver-->>Sender: TCP ACK (with ECE = 1 flag set)
-    Note over Sender: Sees ECE! Triggers Fast Recovery (halves cwnd)!
-    Sender->>Receiver: Next Data Packet (Sets CWR = 1 flag: Window Reduced confirmed)
-```
+![Figure 3.40: Explicit Congestion Notification (ECN - RFC 3168) Lifecycle](figures/fig3_40_ecn_sequence.svg)
 
 1. **Header Bits**:
    - The IPv4/IPv6 header contains two ECN bits (Bits 6 and 7 of the Traffic Class / DSCP field):
@@ -1761,50 +1248,7 @@ sequenceDiagram
 
 While the **Internet Protocol (IPv4 / IPv6)** serves as the transmission backbone of the Network Layer, it cannot function in isolation. The Network Layer is an integrated ecosystem of complementary protocols designed to handle physical-to-logical address translation, diagnostic error reporting, multicast group management, and inter-domain routing.
 
-```mermaid
-flowchart TD
-    subgraph AppTrans["Transport & Application Layers"]
-        TCP_UDP["TCP / UDP Transport Streams"]
-    end
-
-    subgraph NetLayerSuite["TCP/IP Network Layer Protocol Suite"]
-        direction TB
-        
-        IP_CORE["IP Core Protocols<br/>- IPv4 (RFC 791)<br/>- IPv6 (RFC 8200)"]
-        
-        subgraph Diagnostics["Control & Diagnostics"]
-            ICMP["ICMPv4 / ICMPv6<br/>(Error Reporting & Ping / Traceroute)"]
-        end
-        
-        subgraph Multicast["Multicast Management"]
-            IGMP["IGMP (v1 / v2 / v3)<br/>(Local Group Membership)"]
-        end
-        
-        subgraph Resolution["Hardware Address Resolution"]
-            ARP["ARP: Logical IP -> Physical MAC"]
-            RARP["RARP: Physical MAC -> Logical IP"]
-        end
-        
-        subgraph GlobalRouting["Inter-Domain Routing"]
-            BGP["BGP-4 (Path Vector EGP)<br/>(Inter-AS Internet Backbone Routing)"]
-        end
-        
-        IP_CORE --- ICMP
-        IP_CORE --- IGMP
-        IP_CORE --- ARP
-        IP_CORE --- RARP
-        IP_CORE --- BGP
-    end
-
-    subgraph DataLink["Data Link Layer (Layer 2)"]
-        MAC_LAYER["Ethernet / Wi-Fi Frames (MAC Addressing)"]
-    end
-
-    TCP_UDP --> IP_CORE
-    IP_CORE --> MAC_LAYER
-    ARP -.-> MAC_LAYER
-    RARP -.-> MAC_LAYER
-```
+![Figure 3.41: TCP/IP Network Layer Companion Protocol Suite](figures/fig3_41_network_layer_suite.svg)
 
 ---
 
@@ -1813,17 +1257,7 @@ flowchart TD
 ### Motivation & Rationale
 Standardized by the IETF via **RFC 8200**, **IPv6** was designed to replace IPv4 due to the imminent exhaustion of IPv4's 32-bit address space. Beyond providing an astronomical address pool, IPv6 streamlined router processing by simplifying header structures and eliminating router-level fragmentation.
 
-```mermaid
-flowchart TD
-    subgraph IPv6Enhancements["Key IPv6 Architectural Advantages"]
-        E1["1. 128-Bit Address Space (3.4 x 10^38 Addresses)"]
-        E2["2. Simplified Fixed 40-Byte Base Header (Faster Router Processing)"]
-        E3["3. Daisy-Chained Extension Headers (Flexible Options)"]
-        E4["4. Stateless Address Autoconfiguration (SLAAC)"]
-        E5["5. Native Mandatory IPsec Security"]
-        E6["6. Elimination of Broadcast (Replaced by Multicast & Anycast)"]
-    end
-```
+![Figure 3.42: Key Architectural Advancements of IPv6](figures/fig3_42_ipv6_advantages.svg)
 
 ### 1. 128-Bit Address Representation
 - IPv6 addresses are 128 bits in length (yielding $2^{128} \approx 3.4 \times 10^{38}$ distinct addresses).
@@ -1883,14 +1317,7 @@ Unlike IPv4's variable-length header (20–60 bytes), the IPv6 base header is st
 
 Because IP is an unreliable, connectionless "best-effort" protocol, it lacks built-in mechanisms to report transmission failures or verify network reachability. The **Internet Control Message Protocol (ICMPv4 - RFC 792 / ICMPv6 - RFC 4443)** operates as an integral diagnostic companion to IP.
 
-```mermaid
-flowchart TD
-    subgraph ICMP_Roles["Core Roles of ICMP"]
-        R1["1. Error Reporting (Destination Unreachable, Time Exceeded, Parameter Problem)"]
-        R2["2. Diagnostic Queries (Echo Request & Reply -> Ping Utility)"]
-        R3["3. Path Discovery (TTL Expiration Mechanism -> Traceroute Utility)"]
-    end
-```
+![Figure 3.43: Core Diagnostic and Error Reporting Roles of ICMP](figures/fig3_43_icmp_roles.svg)
 
 ### 1. General ICMP Message Format
 ICMP messages are encapsulated directly inside standard IP datagrams ($\text{Protocol} = 1$ in IPv4):
@@ -1942,23 +1369,7 @@ On a local area network (such as Ethernet or Wi-Fi), hosts forward data packets 
 
 The **Address Resolution Protocol (ARP - RFC 826)** bridges this gap by dynamically resolving a known IP address to its corresponding physical MAC address on the local link.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant HostA as Host A (192.168.1.10)
-    participant Switch as Layer 2 Switch
-    participant HostB as Host B (192.168.1.20)
-    participant HostC as Host C (192.168.1.30)
-    
-    Note over HostA: Needs to send to 192.168.1.20.<br/>Checks local ARP Cache: Miss!
-    HostA->>Switch: 1. ARP Request (Broadcast to FF:FF:FF:FF:FF:FF)<br/>"Who has 192.168.1.20? Tell 192.168.1.10!"
-    Switch->>HostB: Floods Broadcast to Host B
-    Switch->>HostC: Floods Broadcast to Host C
-    Note over HostC: Not my IP! Discards packet.
-    Note over HostB: Matches my IP! Updates ARP cache with Host A's MAC.
-    HostB-->>HostA: 2. ARP Reply (Unicast to Host A's MAC)<br/>"I have 192.168.1.20! My MAC is 00:BB:CC:DD:EE:FF"
-    Note over HostA: Updates local ARP Cache!<br/>Transmits pending Data Frame via Unicast.
-```
+![Figure 3.44: Address Resolution Protocol (ARP) Dynamic Request-Reply Workflow](figures/fig3_44_arp_workflow.svg)
 
 ### Operational Cycle: Request and Reply
 1. **ARP Request (Broadcast)**:
@@ -1983,20 +1394,7 @@ sequenceDiagram
 ### Purpose & Historical Context
 While ARP resolves an IP address to a MAC address, the **Reverse Address Resolution Protocol (RARP - RFC 903)** performed the exact inverse operation: mapping a known **Physical MAC Address to an unknown Logical IP Address**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as Diskless Workstation (MAC: 00:11:22:33:44:55)
-    participant Switch as Layer 2 Switch
-    participant Server as RARP Server (Maintains MAC <-> IP Table)
-    
-    Note over Client: Machine boots from ROM.<br/>Knows its burned-in NIC MAC, but has no local disk or IP!
-    Client->>Switch: 1. RARP Request (Broadcast: Ethernet Type 0x8035)<br/>"My MAC is 00:11:22:33:44:55. What is my IP?"
-    Switch->>Server: Floods Broadcast to RARP Server
-    Note over Server: Looks up MAC in static database table.
-    Server-->>Client: 2. RARP Reply (Unicast: Ethernet Type 0x8035)<br/>"Your assigned IP is 192.168.1.50"
-    Note over Client: Configures network interface with 192.168.1.50!
-```
+![Figure 3.45: Reverse ARP (RARP) Diskless Workstation Bootstrap Lifecycle](figures/fig3_45_rarp_bootstrap.svg)
 
 ### Operational Mechanics
 1. **The Diskless Workstation Problem**: Early network workstations lacked internal hard drives to minimize costs and maintain security. When powered on, the machine's bootstrap code in ROM could read its physical MAC address from the NIC, but could not know its IP address.
@@ -2017,28 +1415,7 @@ In standard IP communication, traffic is either **Unicast** (one sender to one r
 
 The **Internet Group Management Protocol (IGMP - RFC 2236 / RFC 3376)** operates at Layer 3 to manage **multicast group memberships between local hosts and their immediate multicast routers**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Host1 as Interested Host 1
-    participant Host2 as Disinterested Host 2
-    participant Router as Multicast Querier Router
-    
-    Note over Host1: User launches IPTV application (Joins Group 239.1.2.3)
-    Host1->>Router: 1. IGMP Membership Report (Joins Group 239.1.2.3)
-    Note over Router: Router registers Subnet as having active viewers!
-    Note over Router: Forwards incoming IPTV Multicast stream to this subnet.
-    
-    Note over Router: Periodic Keepalive Check (Every 125 seconds)
-    Router->>Host1: 2. IGMP Membership Query (Broadcast to 224.0.0.1 - All Hosts)
-    Router->>Host2: 2. IGMP Membership Query (Heard by Host 2)
-    Note over Host2: Not interested in any groups. Discards query.
-    Host1-->>Router: 3. IGMP Membership Report (Confirms still watching 239.1.2.3)
-    
-    Note over Host1: User closes IPTV app
-    Host1->>Router: 4. IGMP Leave Group (Sent to 224.0.0.2 - All Routers)
-    Note over Router: Router halts multicast stream to this subnet!
-```
+![Figure 3.46: IGMP Multicast Group Membership Management](figures/fig3_46_igmp_membership.svg)
 
 ### Key Operational Messages (IGMPv2)
 1. **Membership Query**: Multicast routers periodically transmit a General Query to the "All Systems" multicast address `224.0.0.1` to determine whether active members still exist on the local subnet.
@@ -2053,23 +1430,7 @@ sequenceDiagram
 ### Role: The Glue of the Global Internet
 While internal routing protocols (RIP, OSPF, EIGRP) calculate optimal paths inside a private network, the **Border Gateway Protocol (BGP-4 - RFC 4271)** manages how packets are routed **between independent Autonomous Systems (AS)** across the global Internet backbone.
 
-```mermaid
-flowchart LR
-    subgraph AS10["AS 10 (University / Enterprise)"]
-        R_A["Border Router A<br/>ASN: 10"]
-    end
-
-    subgraph AS20["AS 20 (Regional Telecom ISP)"]
-        R_B["Border Router B<br/>ASN: 20"]
-    end
-
-    subgraph AS30["AS 30 (Tier-1 Global Backbone)"]
-        R_C["Border Router C<br/>ASN: 30"]
-    end
-
-    R_A <===>|"eBGP Peering (TCP 179)<br/>Advertises 130.10.0.0/16<br/>AS-PATH: [10]"| R_B
-    R_B <===>|"eBGP Peering (TCP 179)<br/>Advertises 130.10.0.0/16<br/>AS-PATH: [20, 10]"| R_C
-```
+![Figure 3.47: BGP Path Vector Peering Across Global Autonomous Systems](figures/fig3_47_bgp_interdomain.svg)
 
 ### Core Architecture & Mechanics
 1. **Path Vector Protocol**: Unlike Distance Vector (which tracks only hop counts) or Link State (which floods individual link costs), BGP advertises reachable IP network prefixes paired with an ordered list of Autonomous Systems that traffic must traverse: the **AS-PATH Attribute**.

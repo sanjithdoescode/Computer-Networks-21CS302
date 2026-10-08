@@ -31,17 +31,15 @@ When generating answers for **Long Questions (16 Marks each)**, agents **MUST NE
 ### 1. Foundational Introduction & Historical Context
 - Rationale, motivation, engineering challenges that necessitated the technology, and IETF RFC standards or IEEE specifications.
 
-### 2. Dedicated Mermaid Diagrams (2 to 5 per Question)
-- Every major concept, lifecycle, state transition, and architecture must have a clear diagram.
-- **Strictly Allowed Diagram Types**:
-  - `flowchart TD` / `flowchart LR`
-  - `sequenceDiagram`
-  - `stateDiagram-v2`
-  - `classDiagram`
-  - `erDiagram`
-  - `xychart-beta`
-- **Forbidden Diagram Types**: Never use `gantt` or `pie` (convert timelines and distributions to directed flowcharts or markdown tables).
-- **Label Quoting Rule**: Always wrap node labels containing spaces, parentheses, brackets, colons, or math symbols in double quotes: `id["Class A (50% Space)"]`.
+### 2. Dedicated Publication-Grade Vector Figures (2 to 5 per Question)
+- Every major concept, lifecycle, state transition, and architecture must have a clear visual figure.
+- **Figure Architecture & Standard**:
+  - Figures are rendered as native vector SVGs placed in `UNIT - X/figures/` and referenced via markdown: `![Figure Description](figures/fig_name.svg)`.
+  - **D2 (Declarative Diagramming 2.0)** with academic themes (`--theme=1`) for network architectures, topologies, and multi-host exchange sequences.
+  - **Python Vector SVG Engine** (`scripts/figures/svg_engine.py`) for exact 32-bit packet and frame headers with bit rulers (IPv4, IPv6, TCP, UDP, SCTP, DNS, Ethernet, ARP, ICMP).
+  - **Matplotlib IEEE/ACM Engine** for scientific performance curves and dynamics (TCP Tahoe vs. Reno AIMD sawtooth, Offered load vs. delay, Congestion Collapse Knee/Cliff).
+  - **Graphviz (`dot`)** for protocol Finite State Machines (TCP 11-State FSM, OSPF Adjacency, DHCP Leases) and hierarchical naming trees.
+  - In-line Mermaid blocks are deprecated across this repository in favor of standalone, retina-ready vector SVGs. All diagram source generators are archived and version-controlled in `scripts/figures/`.
 
 ### 3. Bit-Level Packet & Header Layouts
 - Provide complete ASCII text diagrams representing the 32-bit wide header formats (e.g., IPv4, TCP, UDP, OSPF, DHCP, RIP, Ethernet).

@@ -48,16 +48,7 @@ The **Open Systems Interconnection (OSI)** model is an architectural framework d
 
 To foster multivendor interoperability, ISO established a committee to formulate an open, vendor-neutral networking framework. The result was ISO Standard 7498, universally recognized as the **OSI 7-Layer Reference Model**. An **open system** is defined as a set of protocols that allows any two different systems to communicate, regardless of their underlying hardware architectures, operating systems, or internal physical configurations.
 
-```mermaid
-flowchart TD
-    subgraph ISOPrinciples["ISO Layering Principles (ISO 7498)"]
-        P1["1. Abstraction: Create layers where different levels of abstraction are needed"]
-        P2["2. Distinct Function: Each layer performs a well-defined, standardized function"]
-        P3["3. International Standards: Choose functions with international standard protocols"]
-        P4["4. Minimize Cross-Boundary Flow: Minimize information flow across layer boundaries"]
-        P5["5. Optimum Layer Count: Enough layers to avoid clutter; few enough to avoid overhead"]
-    end
-```
+![Figure 1.1: ISO 7498 Layering Principles](figures/fig1_01_iso_principles.svg)
 
 ### The Seven Fundamental Layering Principles
 ISO established seven strict design guidelines to determine the number and boundaries of the layers:
@@ -76,39 +67,7 @@ In the OSI architecture, communication does not occur in a single monolithic ste
 
 However, physical data does not pass directly between peer layers (except at Layer 1). Instead, data generated at the Application Layer passes downward through each intermediate layer on the transmitting machine, travels across the physical transmission medium as electrical, optical, or radio signals, and then ascends through the layers of the receiving machine.
 
-```mermaid
-flowchart LR
-    subgraph Sender["Transmitting Host"]
-        direction TB
-        S7["7. Application Layer"]
-        S6["6. Presentation Layer"]
-        S5["5. Session Layer"]
-        S4["4. Transport Layer"]
-        S3["3. Network Layer"]
-        S2["2. Data Link Layer"]
-        S1["1. Physical Layer"]
-        S7 --> S6 --> S5 --> S4 --> S3 --> S2 --> S1
-    end
-
-    subgraph Receiver["Receiving Host"]
-        direction TB
-        R7["7. Application Layer"]
-        R6["6. Presentation Layer"]
-        R5["5. Session Layer"]
-        R4["4. Transport Layer"]
-        R3["3. Network Layer"]
-        R2["2. Data Link Layer"]
-        R1["1. Physical Layer"]
-        R1 --> R2 --> R3 --> R4 --> R5 --> R6 --> R7
-    end
-
-    S1 <===>|"Raw Bit Stream over Transmission Medium"| R1
-    
-    S7 -.->|"Peer Protocol: HTTP, DNS, FTP"| R7
-    S4 -.->|"Peer Protocol: TCP, UDP"| R4
-    S3 -.->|"Peer Protocol: IP, ICMP"| R3
-    S2 -.->|"Peer Protocol: Ethernet MAC"| R2
-```
+![Figure 1.2: Peer-to-Peer Communication and Virtual Interfaces Across Layers](figures/fig1_02_peer_to_peer.svg)
 
 ### Layer Interfaces, SAPs, and Service Primitives
 - **Service Access Point (SAP)**: The conceptual interface through which layer $N-1$ provides services to layer $N$. Each SAP has a unique address (e.g., port numbers at Layer 4, IP addresses at Layer 3, MAC addresses at Layer 2).
@@ -116,45 +75,13 @@ flowchart LR
 - **Protocol Control Information (PCI)**: The header (and optional trailer) added by the layer containing control instructions for its peer layer.
 - **Protocol Data Unit (PDU)**: The combined entity: $\text{PDU} = \text{PCI} + \text{SDU}$.
 
-```mermaid
-flowchart TD
-    subgraph EncapsulationProcess["Data Encapsulation & Decapsulation Flow"]
-        direction TB
-        D7["User Application Data"]
-        D6["H6 + Data (Presentation PDU)"]
-        D5["H5 + H6 + Data (Session PDU)"]
-        D4["H4 + H5 + H6 + Data (Transport Segment)"]
-        D3["H3 + H4 + H5 + H6 + Data (Network Packet)"]
-        D2["H2 + H3 + H4 + H5 + H6 + Data + T2 (Data Link Frame)"]
-        D1["0101100101... (Physical Raw Bits)"]
-        
-        D7 -->|"Prepend H6"| D6
-        D6 -->|"Prepend H5"| D5
-        D5 -->|"Prepend H4"| D4
-        D4 -->|"Prepend H3"| D3
-        D3 -->|"Prepend H2 & Append T2"| D2
-        D2 -->|"Modulate to Signals"| D1
-    end
-```
+![Figure 1.3: Data Encapsulation and Decapsulation PDU Lifecycle](figures/fig1_03_encapsulation_stack.svg)
 
 ---
 
 ## 1.3 Detailed Examination of the 7 Layers (Physical to Application)
 
-```mermaid
-flowchart TB
-    subgraph OSIStack["The Complete 7-Layer OSI Reference Architecture"]
-        L7["Layer 7: APPLICATION LAYER<br/>Network Virtual Terminal, Directory Services, Mail Services, FTAM"]
-        L6["Layer 6: PRESENTATION LAYER<br/>Syntax Translation, ASN.1 Encoding, Encryption/Decryption, Compression"]
-        L5["Layer 5: SESSION LAYER<br/>Dialog Separation, Half/Full Duplex Control, Checkpointing & Synchronization"]
-        L4["Layer 4: TRANSPORT LAYER<br/>Port Addressing, Segmentation/Reassembly, Connection Management, Flow & Error Control"]
-        L3["Layer 3: NETWORK LAYER<br/>Logical IP Addressing, Routing Algorithms, Packet Fragmentation & Reassembly"]
-        L2["Layer 2: DATA LINK LAYER<br/>LLC & MAC Sublayers, Physical Addressing, Framing, Flow/Error Control, CSMA/CD"]
-        L1["Layer 1: PHYSICAL LAYER<br/>Bit Representation, Line Coding, Data Rate, Topologies, Transmission Modes"]
-
-        L7 --- L6 --- L5 --- L4 --- L3 --- L2 --- L1
-    end
-```
+![Figure 1.4: Complete 7-Layer OSI Reference Architecture](figures/fig1_04_osi_7layers.svg)
 
 ### Layer 1: Physical Layer
 The Physical Layer coordinates the functions required to transmit an unstructured, raw bitstream over a physical medium. It interfaces directly with transmission media hardware.
@@ -264,37 +191,7 @@ The Application Layer sits at the top of the OSI reference model and provides di
 
 While the OSI model is revered as the theoretical foundation for computer networking pedagogy, the **TCP/IP Protocol Suite** emerged as the de facto operational standard for the Internet.
 
-```mermaid
-flowchart LR
-    subgraph OSIModel["OSI 7-Layer Reference Model"]
-        direction TB
-        O7["7. Application Layer"]
-        O6["6. Presentation Layer"]
-        O5["5. Session Layer"]
-        O4["4. Transport Layer"]
-        O3["3. Network Layer"]
-        O2["2. Data Link Layer"]
-        O1["1. Physical Layer"]
-        O7 --- O6 --- O5 --- O4 --- O3 --- O2 --- O1
-    end
-
-    subgraph TCPIPModel["TCP/IP 4/5-Layer Architecture"]
-        direction TB
-        T4["Application Layer<br/>(Combines Application, Presentation, Session)"]
-        T3["Transport Layer<br/>(Host-to-Host: TCP, UDP)"]
-        T2["Internet Layer<br/>(Internetworking: IP, ICMP, ARP)"]
-        T1["Network Access / Link Layer<br/>(Hardware Interface: Physical & Data Link)"]
-        T4 --- T3 --- T2 --- T1
-    end
-
-    O7 -.-> T4
-    O6 -.-> T4
-    O5 -.-> T4
-    O4 -.-> T3
-    O3 -.-> T2
-    O2 -.-> T1
-    O1 -.-> T1
-```
+![Figure 1.5: OSI 7-Layer Model vs. TCP/IP 5-Layer Model Architecture](figures/fig1_05_osi_vs_tcpip.svg)
 
 ### Critical Comparison Parameters
 
@@ -317,24 +214,7 @@ flowchart LR
 
 The Transport Layer is responsible for providing end-to-end, process-to-process communication across a network. It acts as an operational liaison between the application-layer software processes and the underlying network substrate.
 
-```mermaid
-flowchart TD
-    subgraph HostArchitecture["Host Socket Multiplexing and Demultiplexing"]
-        direction TB
-        P1["Browser Process (Port 54210)"]
-        P2["Mail Client Process (Port 54211)"]
-        P3["DNS Client Process (Port 54212)"]
-        
-        TL["Transport Layer Engine (TCP / UDP)"]
-        
-        P1 -->|"TCP Socket"| TL
-        P2 -->|"TCP Socket"| TL
-        P3 -->|"UDP Socket"| TL
-        
-        NL["Network Layer (IP: 192.168.1.100)"]
-        TL -->|"Encapsulated IP Packets"| NL
-    end
-```
+![Figure 1.6: Transport Layer Multiplexing and Demultiplexing Architecture](figures/fig1_06_socket_demux.svg)
 
 ### Port Numbers and Sockets
 To distinguish between multiple concurrent processes executing on the same host, the transport layer utilizes **16-bit Port Numbers** (ranging from 0 to 65,535), categorized into three IANA ranges:
@@ -400,26 +280,7 @@ TCP is an IETF-standardized (RFC 793, RFC 1323, RFC 5681), connection-oriented, 
 
 ### The TCP Connection Lifecycle
 
-```mermaid
-sequenceDiagram
-    autonumber
-    Note over Client,Server: Phase 1: 3-Way Handshake (Establishment)
-    Client->>Server: SYN (seq = 1000, ACK = 0, Window = 65535)
-    Server-->>Client: SYN + ACK (seq = 5000, ack = 1001, Window = 32768)
-    Client->>Server: ACK (seq = 1001, ack = 5001)
-    
-    Note over Client,Server: Phase 2: Full-Duplex Reliable Data Transfer
-    Client->>Server: Data Segment (seq = 1001, payload = 1000 bytes)
-    Server-->>Client: Cumulative ACK (ack = 2001, Window = 31768)
-    
-    Note over Client,Server: Phase 3: 4-Way Teardown (Connection Termination)
-    Client->>Server: FIN (seq = 2001)
-    Server-->>Client: ACK (ack = 2002)
-    Note over Server: Server flushes remaining write buffers...
-    Server-->>Client: FIN (seq = 5001)
-    Client->>Server: ACK (ack = 5002)
-    Note over Client: Client enters TIME_WAIT (2 * MSL) state
-```
+![Figure 1.7: Complete TCP Connection Lifecycle (Handshake, Data Transfer, Teardown)](figures/fig1_07_tcp_lifecycle.svg)
 
 #### Detailed Breakdown of Handshake and Teardown
 - **Step 1 (SYN)**: The client chooses an Initial Sequence Number ($\text{ISN}_C = 1000$) and sends a segment with $\text{SYN}=1, \text{ACK}=0$.
@@ -433,16 +294,7 @@ sequenceDiagram
 ### Flow Control: The Sliding Window Mechanism
 TCP uses a **byte-oriented sliding window** mechanism to prevent a fast transmitter from overflowing a slow receiver's input buffers.
 
-```mermaid
-flowchart LR
-    subgraph WindowBuffer["Receiver Buffer View: Advertised Window = 4000 Bytes"]
-        direction LR
-        B1["Bytes 1-2000<br/>Acknowledged & Delivered"]
-        B2["Bytes 2001-4000<br/>Received in Buffer, Unread"]
-        B3["Bytes 4001-6000<br/>Usable Advertised Window"]
-        B4["Bytes 6001+<br/>Outside Window (Cannot Send)"]
-    end
-```
+![Figure 1.8: TCP Byte-Oriented Sliding Window Receiver Buffer Model](figures/fig1_08_sliding_window_buffer.svg)
 
 The receiver calculates its **Advertised Window (rwnd)** as:
 $$\text{rwnd} = \text{MaxBufferSize} - (\text{BytesBuffered} - \text{BytesRead})$$
@@ -456,23 +308,7 @@ $$\text{rwnd} = \text{MaxBufferSize} - (\text{BytesBuffered} - \text{BytesRead})
 TCP monitors end-to-end network capacity dynamically using the **Congestion Window (cwnd)** variable. The sender is constrained by:
 $$\text{Effective Window} = \min(\text{rwnd}, \text{cwnd})$$
 
-```mermaid
-flowchart TD
-    subgraph CongestionControl["TCP Congestion Control State Machine"]
-        SS["1. Slow Start<br/>Exponential Growth: cwnd doubles every RTT<br/>cwnd = cwnd + 1 MSS per ACK"]
-        CA["2. Congestion Avoidance<br/>Additive Increase: cwnd increases linearly<br/>cwnd = cwnd + (1 / cwnd) per ACK"]
-        FR["3. Fast Retransmit & Fast Recovery<br/>Triggered by 3 Duplicate ACKs"]
-        TO["Timeout Detected<br/>Severe Congestion!"]
-        
-        SS -->|"When cwnd >= ssthresh"| CA
-        CA -->|"3 Duplicate ACKs"| FR
-        SS -->|"3 Duplicate ACKs"| FR
-        CA -->|"RTO Timeout"| TO
-        SS -->|"RTO Timeout"| TO
-        TO -->|"ssthresh = cwnd/2<br/>cwnd = 1 MSS"| SS
-        FR -->|"TCP Reno: cwnd = ssthresh + 3 MSS"| CA
-    end
-```
+![Figure 1.9: TCP Congestion Control State Machine (Tahoe vs. Reno)](figures/fig1_09_congestion_control_fsm.svg)
 
 1. **Slow Start**: Initial phase where $\text{cwnd} = 1\text{ MSS}$. For each ACK received, $\text{cwnd}$ increases by 1 MSS, causing it to double every Round Trip Time (RTT):
    $$\text{cwnd} = \text{cwnd} \times 2 \quad (\text{per RTT})$$
@@ -539,16 +375,7 @@ UDP (standardized in RFC 768) is a minimal, connectionless transport protocol th
 
 ## 2.5 Real-World Case Studies & Protocol Selection Criteria
 
-```mermaid
-flowchart TD
-    DECIDE{"Application Requirement Decision"}
-    
-    DECIDE -->|"Requires Guaranteed Delivery & Integrity"| TCP_PATH["Use TCP<br/>- Web Browsing (HTTP/HTTPS)<br/>- File Downloads (FTP)<br/>- Email Transport (SMTP/IMAP)<br/>- Remote Management (SSH)"]
-    
-    DECIDE -->|"Requires Low Latency & High Speed"| UDP_PATH["Use UDP<br/>- Live Video Streaming (RTP)<br/>- Voice over IP (VoIP)<br/>- Real-Time Multiplayer Gaming<br/>- Fast Query/Response (DNS, DHCP)"]
-    
-    DECIDE -->|"Next-Gen Hybrid Needs"| QUIC_PATH["Use QUIC over UDP<br/>- HTTP/3 Transport<br/>- Built-in Encryption (TLS 1.3)<br/>- Zero RTT Reconnection<br/>- Solves Head-of-Line Blocking"]
-```
+![Figure 1.10: Application Protocol Selection Decision Tree (TCP vs. UDP)](figures/fig1_10_protocol_selection_tree.svg)
 
 1. **DNS (Domain Name System)**: Uses UDP on Port 53 for standard hostname lookups because a single query fits in a single packet. Setting up a 3-way TCP handshake would double the lookup latency. However, DNS switches to TCP for zone transfers between servers where data integrity is critical.
 2. **HTTP/3 and QUIC**: While HTTP/1.1 and HTTP/2 relied on TCP, they suffered from **Head-of-Line (HoL) Blocking**—if a single packet was dropped, TCP froze all multiplexed streams until that packet was retransmitted. HTTP/3 runs over **QUIC**, which sits atop **UDP**, implementing stream multiplexing, encryption, and custom congestion control at the application layer to eliminate HoL blocking entirely.
@@ -565,24 +392,7 @@ For a global network with millions of devices, this approach is mathematically a
 
 A **Switched Network** solves this scalability challenge. Instead of point-to-point links between every pair of nodes, devices connect to a shared network of intermediate switching nodes. These switches accept incoming transmissions and steer them across internal paths toward their final destination.
 
-```mermaid
-flowchart TD
-    SW_NET["Switching Methodologies in Computer Networks"]
-    
-    CS["1. Circuit Switching<br/>(Dedicated Physical Path)"]
-    MS["2. Message Switching<br/>(Store-and-Forward Entire Message)"]
-    PS["3. Packet Switching<br/>(Store-and-Forward Bounded Packets)"]
-    
-    SW_NET --> CS
-    SW_NET --> MS
-    SW_NET --> PS
-    
-    DG["3A. Datagram Approach<br/>(Connectionless Packet Switching)"]
-    VC["3B. Virtual Circuit Approach<br/>(Connection-Oriented Packet Switching)"]
-    
-    PS --> DG
-    PS --> VC
-```
+![Figure 1.11: Taxonomy of Switching Methodologies in Computer Networks](figures/fig1_11_switching_taxonomy.svg)
 
 ---
 
@@ -590,30 +400,7 @@ flowchart TD
 
 Circuit Switching establishes a dedicated, end-to-end physical communication channel between two stations through intermediate switches before any data can be transmitted.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant HostA as Sending Host A
-    participant Sw1 as Switch 1
-    participant Sw2 as Switch 2
-    participant HostB as Receiving Host B
-    
-    Note over HostA,HostB: Phase 1: Circuit Establishment (Setup Delay)
-    HostA->>Sw1: Connection Request Signal
-    Sw1->>Sw2: Allocate Crossbar / Time-Slot
-    Sw2->>HostB: Ringing / Setup Signal
-    HostB-->>Sw2: Connection Accepted
-    Sw2-->>Sw1: Confirm Allocation
-    Sw1-->>HostA: Circuit Established (Dedicated Path Locked)
-    
-    Note over HostA,HostB: Phase 2: Continuous Data Transfer
-    HostA->>HostB: Continuous Bitstream (No headers, zero queuing delay)
-    
-    Note over HostA,HostB: Phase 3: Circuit Teardown
-    HostA->>Sw1: Teardown / Release Signal
-    Sw1->>Sw2: Deallocate Resources
-    Sw2->>HostB: Circuit Disconnected
-```
+![Figure 1.12: Three-Phase Lifecycle of Circuit Switching](figures/fig1_12_circuit_switching_phases.svg)
 
 ### The Three Operational Phases
 1. **Circuit Establishment**: Prior to data transmission, an end-to-end path is negotiated. Intermediate switches reserve dedicated physical crossbar connections or specific Time-Division Multiplexing (TDM) time slots. If any link along the requested path lacks free capacity, the caller receives a busy signal and the attempt fails.
@@ -632,12 +419,7 @@ sequenceDiagram
 
 Developed in the 1960s (used in telegraph systems and early military networks like AUTODIN), **Message Switching** eliminated dedicated physical circuits.
 
-```mermaid
-flowchart LR
-    HostA["Host A"] -->|"Entire Message"| SW1["Switch 1<br/>(Buffers on Disk)"]
-    SW1 -->|"Entire Message"| SW2["Switch 2<br/>(Buffers on Disk)"]
-    SW2 -->|"Entire Message"| HostB["Host B"]
-```
+![Figure 1.13: Message Switching Sequential Store-and-Forward Operation](figures/fig1_13_message_switching.svg)
 
 ### Operational Principles & Critical Flaws
 - In message switching, the sender treats an entire file, email, or telegram as a single monolithic block called a **Message**.
@@ -660,17 +442,7 @@ In a datagram network (the architectural foundation of the Internet Protocol - I
 - **Packets may take different paths**: Due to shifting traffic loads or link failures, Packet 1 might travel via Router A $\to$ Router B, while Packet 2 travels via Router A $\to$ Router C.
 - **Out-of-Order Delivery**: Packets may arrive out of sequence, with the receiving host's transport layer responsible for reassembling them in order.
 
-```mermaid
-flowchart TD
-    subgraph DatagramNetwork["Datagram Packet Switching (Dynamic Multi-Path)"]
-        direction LR
-        SRC["Sender"] -->|"Packets 1, 2, 3"| R1["Router 1"]
-        R1 -->|"Packet 1 (Path A)"| R2["Router 2"]
-        R1 -->|"Packets 2, 3 (Path B)"| R3["Router 3"]
-        R2 -->|"Packet 1"| DST["Receiver<br/>(Reorders: 1, 2, 3)"]
-        R3 -->|"Packets 2, 3"| DST
-    end
-```
+![Figure 1.14: Datagram Packet Switching Dynamic Independent Routing](figures/fig1_14_datagram_packet_switching.svg)
 
 ### 2. The Virtual Circuit Approach (Connection-Oriented Packet Switching)
 In a Virtual Circuit network (such as X.25, Frame Relay, and ATM):
@@ -680,15 +452,7 @@ In a Virtual Circuit network (such as X.25, Frame Relay, and ATM):
 - **Guaranteed In-Order Delivery**: All packets follow the same path and arrive at the destination in exact sequence.
 - **Permanent Virtual Circuits (PVC)** are statically provisioned by network administrators, whereas **Switched Virtual Circuits (SVC)** are established dynamically on demand.
 
-```mermaid
-flowchart LR
-    subgraph VCNetwork["Virtual Circuit Packet Switching (Fixed Logical Path)"]
-        direction LR
-        S["Host A"] -->|"Data (VCI = 14)"| SW1["Switch 1<br/>[Table: In 14 -> Out 77]"]
-        SW1 -->|"Data (VCI = 77)"| SW2["Switch 2<br/>[Table: In 77 -> Out 42]"]
-        SW2 -->|"Data (VCI = 42)"| D["Host B"]
-    end
-```
+![Figure 1.15: Virtual Circuit Packet Switching Fixed Path Routing](figures/fig1_15_virtual_circuit_switching.svg)
 
 ---
 
@@ -696,30 +460,7 @@ flowchart LR
 
 To understand why packet switching is vastly superior to message switching, consider transmitting a message of size $M$ bits over a network of $k$ hops (where each hop is an intermediate link of bandwidth $R$ bps and propagation delay is negligible).
 
-```mermaid
-flowchart TD
-    subgraph MsgTimeline["1. Message Switching Timeline (Sequential - No Pipelining)"]
-        direction LR
-        M_H1["Hop 1: Transmit M (0 to 30s)"] --> M_H2["Hop 2: Buffer then Transmit (30 to 60s)"] --> M_H3["Hop 3: Buffer then Transmit (60 to 90s)"]
-    end
-
-    subgraph PktTimeline["2. Packet Switching Timeline (Concurrent Pipelining)"]
-        direction TB
-        subgraph Step1["Time 0s - 10s"]
-            P1_H1["Hop 1: Packet 1"]
-        end
-        subgraph Step2["Time 10s - 20s (Pipelined)"]
-            P2_H1["Hop 1: Packet 2"]
-            P1_H2["Hop 2: Packet 1"]
-        end
-        subgraph Step3["Time 20s - 30s (Pipelined)"]
-            P3_H1["Hop 1: Packet 3"]
-            P2_H2["Hop 2: Packet 2"]
-            P1_H3["Hop 3: Packet 1 (Delivered!)"]
-        end
-        Step1 --> Step2 --> Step3
-    end
-```
+![Figure 1.16: Transmission Delay Comparison: Message Switching vs. Packet Pipelining](figures/fig1_16_switching_delay_pipeline.svg)
 
 ### Analytical Delay Formulas
 - **Message Switching Total Transmission Time**:
@@ -764,16 +505,7 @@ Assume a $12\text{ Mb}$ file is transmitted over a 3-hop path ($k = 3$) where ea
 
 The **Topology** of a network defines the geometric arrangement and structural relationship between links and nodes. It determines how devices are interconnected physically and how data signals propagate logically.
 
-```mermaid
-flowchart TD
-    TOP_CLASS["Network Topology Classification"]
-    
-    PT["Physical Topology<br/>(Physical layout of cables, devices, and interfaces)"]
-    LT["Logical Topology<br/>(Logical path of data transmission and signal flow)"]
-    
-    TOP_CLASS --> PT
-    TOP_CLASS --> LT
-```
+![Figure 1.17: Comprehensive Network Topology Classification](figures/fig1_17_topology_classification.svg)
 
 - **Physical Topology**: The physical arrangement of cables, patch panels, networking devices, and workstations in a building.
 - **Logical Topology**: The operational path data frames take between devices.
@@ -785,25 +517,7 @@ flowchart TD
 
 In a **Fully Connected Mesh Topology**, every station has a dedicated point-to-point physical link to every other station in the network.
 
-```mermaid
-flowchart TD
-    subgraph FullMesh["Fully Connected Mesh Topology (N = 5 Nodes)"]
-        direction TB
-        N1((Node 1)) <---> N2((Node 2))
-        N1 <---> N3((Node 3))
-        N1 <---> N4((Node 4))
-        N1 <---> N5((Node 5))
-        
-        N2 <---> N3
-        N2 <---> N4
-        N2 <---> N5
-        
-        N3 <---> N4
-        N3 <---> N5
-        
-        N4 <---> N5
-    end
-```
+![Figure 1.18: Fully Connected Mesh Topology Architecture](figures/fig1_18_mesh_topology.svg)
 
 ### Mathematical Formulations
 For a network consisting of $N$ devices:
@@ -837,18 +551,7 @@ For a network consisting of $N$ devices:
 
 In a **Star Topology**, every host maintains a dedicated point-to-point link to a central controller, commonly known as a **Network Switch** (or historically, a Hub).
 
-```mermaid
-flowchart TD
-    subgraph StarNet["Star Topology Architecture"]
-        SW["Central Layer 2 Switch<br/>(Maintains MAC Forwarding Table)"]
-        
-        H1["Workstation 1"] <-->|"Dedicated Link"| SW
-        H2["Workstation 2"] <-->|"Dedicated Link"| SW
-        H3["Database Server"] <-->|"Dedicated Link"| SW
-        H4["Network Printer"] <-->|"Dedicated Link"| SW
-        H5["Backup Server"] <-->|"Dedicated Link"| SW
-    end
-```
+![Figure 1.19: Star Topology Centralized Switch Architecture](figures/fig1_19_star_topology.svg)
 
 ### Architectural Operation
 - Nodes do not communicate directly with each other. If Workstation 1 wishes to send a frame to the Database Server, it sends the frame over its dedicated link to the central switch.
@@ -875,22 +578,7 @@ flowchart TD
 
 A **Bus Topology** is a multipoint configuration where all network devices connect to a single, continuous communication cable called the **Backbone**.
 
-```mermaid
-flowchart LR
-    subgraph BusNet["Bus Topology Architecture"]
-        direction LR
-        T1["50 Ohm Terminator"] --- B1["Node 1"]
-        B1 --- B2["Node 2"]
-        B2 --- B3["Node 3"]
-        B3 --- B4["Node 4"]
-        B4 --- T2["50 Ohm Terminator"]
-        
-        B1 -.->|"Drop Cable & Tap"| PC1["PC A"]
-        B2 -.->|"Drop Cable & Tap"| PC2["PC B"]
-        B3 -.->|"Drop Cable & Tap"| PC3["PC C"]
-        B4 -.->|"Drop Cable & Tap"| PC4["PC D"]
-    end
-```
+![Figure 1.20: Bus Topology Shared Backbone Cable Architecture](figures/fig1_20_bus_topology.svg)
 
 ### Physical Construction & Operation
 - Devices connect to the central coaxial cable (e.g., 10BASE5 Thicknet or 10BASE2 Thinnet) via **Drop Lines** and **Taps** (vampire taps or BNC T-connectors).
@@ -917,17 +605,7 @@ flowchart LR
 
 In a **Ring Topology**, every station is connected to exactly two neighboring nodes, forming an unbroken circular loop. Data travels unidirectionally (or bidirectionally in dual rings) from node to node around the circle.
 
-```mermaid
-flowchart TD
-    subgraph RingNet["Token Ring Topology Operation"]
-        direction TB
-        R1["Station 1"] -->|"1. Generates Frame"| R2["Station 2 (Repeater)"]
-        R2 -->|"2. Regenerates Frame"| R3["Station 3 (Destination - Copies Data)"]
-        R3 -->|"3. Sets ACK Bits"| R4["Station 4 (Repeater)"]
-        R4 -->|"4. Returns to Sender"| R1
-        R1 -.->|"5. Strips Frame & Releases Free Token"| R2
-    end
-```
+![Figure 1.21: Token Ring Unidirectional Loop Operation](figures/fig1_21_ring_topology.svg)
 
 ### Token Passing Operational Workflow
 1. A small, specialized 3-byte control frame called the **Token** circulates constantly around the ring when the network is idle.
@@ -940,16 +618,7 @@ flowchart TD
 ### Dual-Ring Architecture (FDDI / SONET)
 To overcome the vulnerability of a single broken link, advanced systems like **Fiber Distributed Data Interface (FDDI)** and **SONET** use two concentric counter-rotating rings: a **Primary Ring** for normal data transmission, and a **Secondary Ring** running in reverse.
 
-```mermaid
-flowchart LR
-    subgraph SelfHealing["Self-Healing Dual-Ring Architecture"]
-        direction LR
-        S1["Station A"] <===>|"Primary Link"| S2["Station B"]
-        S2 <===>|"CABLE FAULT!"| S3["Station C (Fault Detected)"]
-        S3 <===>|"Loopback Wrapped"| S4["Station D"]
-        S4 <===>|"Secondary Link"| S1
-    end
-```
+![Figure 1.22: Self-Healing Dual-Ring (FDDI / SONET) Architecture](figures/fig1_22_dual_ring_fddi.svg)
 
 If a cable is severed between Station B and Station C, the adjacent stations automatically wrap the primary ring into the secondary ring, forming a single operational closed loop that maintains connectivity without human intervention.
 
@@ -960,33 +629,7 @@ If a cable is severed between Station B and Station C, the adjacent stations aut
 ### 1. Tree (Hierarchical) Topology
 A **Tree Topology** is a hierarchical variant of the Star topology where individual star hubs or switches are cascaded to a central root switch.
 
-```mermaid
-flowchart TD
-    subgraph HierarchicalTree["Cisco 3-Layer Hierarchical Network Design"]
-        CORE["Core Layer Switch<br/>(Ultra High-Speed Backbone)"]
-        
-        DIST1["Distribution Switch A<br/>(Routing, Policies, ACLs)"]
-        DIST2["Distribution Switch B<br/>(Routing, Policies, ACLs)"]
-        
-        CORE <===> DIST1
-        CORE <===> DIST2
-        
-        ACC1["Access Switch 1"]
-        ACC2["Access Switch 2"]
-        ACC3["Access Switch 3"]
-        ACC4["Access Switch 4"]
-        
-        DIST1 --- ACC1
-        DIST1 --- ACC2
-        DIST2 --- ACC3
-        DIST2 --- ACC4
-        
-        ACC1 --- PC1["Host 1"]
-        ACC2 --- PC2["Host 2"]
-        ACC3 --- PC3["Host 3"]
-        ACC4 --- PC4["Host 4"]
-    end
-```
+![Figure 1.23: Cisco 3-Layer Hierarchical Network Tree Architecture](figures/fig1_23_hierarchical_tree.svg)
 
 - **Core Layer**: High-speed switching backbone designed for rapid packet transport across enterprise buildings.
 - **Distribution Layer**: Implements policy-based routing, packet filtering, Access Control Lists (ACLs), and VLAN routing.
@@ -1019,24 +662,7 @@ flowchart TD
 
 Transmission media reside directly beneath the Physical Layer of the OSI reference model, providing the physical conduit through which data signals propagate from sender to receiver.
 
-```mermaid
-flowchart TD
-    TRANS_MEDIA["Classification of Transmission Media"]
-    
-    GM["1. Guided Media<br/>(Wired / Bounded / Conducted)"]
-    UM["2. Unguided Media<br/>(Wireless / Unbounded / Radiated)"]
-    
-    TRANS_MEDIA --> GM
-    TRANS_MEDIA --> UM
-    
-    GM --> TP["Twisted Pair Cable<br/>- Unshielded (UTP)<br/>- Shielded (STP)"]
-    GM --> COAX["Coaxial Cable<br/>- Baseband (50 Ohm)<br/>- Broadband (75 Ohm)"]
-    GM --> FIBER["Fiber-Optic Cable<br/>- Single-Mode (SMF)<br/>- Multi-Mode (MMF)"]
-    
-    UM --> RADIO["Radio Waves (3 kHz - 1 GHz)<br/>Omnidirectional, penetrates walls"]
-    UM --> MICRO["Microwaves (1 GHz - 300 GHz)<br/>Line-of-Sight, directional dish"]
-    UM --> INFRA["Infrared Waves (300 GHz - 400 THz)<br/>Short-range, blocked by walls"]
-```
+![Figure 1.24: Taxonomy and Classification of Physical Transmission Media](figures/fig1_24_transmission_media_tree.svg)
 
 ### Theoretical Channel Capacity: Nyquist and Shannon Theorems
 The transmission capacity of any physical medium is fundamentally governed by two foundational mathematical theorems:
@@ -1067,18 +693,7 @@ Guided transmission media constrain electromagnetic signals within physical cond
 ### 1. Twisted Pair Cable
 Twisted pair cabling consists of two insulated copper conductors (typically 22 to 26 AWG) twisted together in a regular helical pattern.
 
-```mermaid
-flowchart LR
-    subgraph TwistedPair["Twisted Pair Physics: Noise Cancellation"]
-        direction LR
-        WIRE1["Wire A (Signal + Noise)"]
-        WIRE2["Wire B (Signal - Noise)"]
-        DIFF["Differential Receiver: (A - B)<br/>Noise Cancels Out!"]
-        
-        WIRE1 --> DIFF
-        WIRE2 --> DIFF
-    end
-```
+![Figure 1.25: Twisted Pair Differential Signaling and Noise Cancellation Physics](figures/fig1_25_twisted_pair_physics.svg)
 
 #### The Physics of Twisting and Noise Cancellation
 - When an external electromagnetic interference (EMI) field crosses parallel wires, the wire closer to the noise source absorbs more induced current than the farther wire, creating a differential noise voltage that corrupts data signals.
@@ -1129,18 +744,7 @@ Coaxial cable ("coax") carries high-frequency signals with higher bandwidth and 
 ### 3. Fiber-Optic Cable
 Fiber-optic technology transmits data as pulses of light through thin strands of ultra-pure silica glass or plastic.
 
-```mermaid
-flowchart LR
-    subgraph FiberTIR["Physics of Total Internal Reflection (TIR)"]
-        direction LR
-        CORE["Core (Refractive Index n1 = 1.48)"]
-        CLAD["Cladding (Refractive Index n2 = 1.46)"]
-        
-        RAY["Light Ray enters Core<br/>Angle of Incidence > Critical Angle"]
-        RAY -->|"Bounces at Boundary"| CORE
-        CLAD -.->|"Reflects Light Back"| CORE
-    end
-```
+![Figure 1.26: Physics of Total Internal Reflection (TIR) in Optical Fiber](figures/fig1_26_fiber_optics_tir.svg)
 
 #### Physics of Light Propagation: Snell's Law and Total Internal Reflection (TIR)
 When light passes from an optically denser medium (core) with refractive index $n_1$ to an optically less dense medium (cladding) with refractive index $n_2$ (where $n_1 > n_2$), the light ray bends away from the normal according to **Snell's Law**:
@@ -1151,20 +755,7 @@ $$\theta_c = \arcsin\left(\frac{n_2}{n_1}\right)$$
 
 #### Single-Mode Fiber (SMF) vs. Multi-Mode Fiber (MMF)
 
-```mermaid
-flowchart TD
-    subgraph SMF_View["1. Single-Mode Fiber (SMF) - Core Diameter: 8-10 Microns"]
-        direction LR
-        LASER["Laser Diode Source (1310 / 1550 nm)"] ===>|"Single Axial Ray (Zero Modal Dispersion)"| SMF_CORE["Narrow Core (~9 um)"]
-    end
-
-    subgraph MMF_View["2. Multi-Mode Fiber (MMF) - Core Diameter: 50-62.5 Microns"]
-        direction LR
-        LED["LED / VCSEL Source (850 / 1300 nm)"] -->|"Ray 1 (Direct)"| MMF_CORE["Wide Core (~50 um)"]
-        LED -->|"Ray 2 (Bouncing High Angle)"| MMF_CORE
-        LED -->|"Ray 3 (Bouncing Low Angle)"| MMF_CORE
-    end
-```
+![Figure 1.27: Structural and Modal Comparison: Single-Mode vs. Multi-Mode Fiber](figures/fig1_27_smf_vs_mmf.svg)
 
 | Parameter | Single-Mode Fiber (SMF) | Multi-Mode Fiber (MMF) |
 | :--- | :--- | :--- |
@@ -1185,12 +776,7 @@ Unguided media convey electromagnetic waves through air, vacuum, or water withou
 
 ### Electromagnetic Propagation Mechanisms
 
-```mermaid
-flowchart LR
-    GW["1. Ground Wave Propagation<br/>(< 2 MHz)<br/>Follows curvature of the Earth"]
-    SW["2. Sky Wave Propagation<br/>(2 - 30 MHz)<br/>Reflects off Ionosphere"]
-    LOS["3. Line-of-Sight Propagation<br/>(> 30 MHz)<br/>Direct tower-to-tower / Satellite"]
-```
+![Figure 1.28: Electromagnetic Propagation Mechanisms (Ground, Sky, Line-of-Sight)](figures/fig1_28_wireless_propagation.svg)
 
 1. **Ground Wave Propagation (< 2 MHz)**: Low-frequency electromagnetic waves travel through the lower atmosphere, hugging the curvature of the Earth. Waves can bend around terrain obstacles. Used in VLF/LF maritime navigation and AM radio broadcasts.
 2. **Sky Wave Propagation (2 to 30 MHz)**: High-frequency signals radiate upward into the ionosphere (layers of charged particles created by solar radiation) and bounce back down to Earth. This skip-propagation enables intercontinental communication without cables. Used in international shortwave radio and amateur HAM radio.
@@ -1200,16 +786,7 @@ flowchart LR
 
 ## 5.4 Radio Waves, Microwaves, and Infrared Characteristics
 
-```mermaid
-flowchart TD
-    subgraph EMSpectrum["Unguided Wireless Bands Breakdown"]
-        RADIO["Radio Waves<br/>Band: 3 kHz to 1 GHz<br/>Properties: Omnidirectional, penetrates walls, long range<br/>Uses: FM Radio, VHF Television, Paging, Cordless phones"]
-        
-        MICRO["Microwaves<br/>Band: 1 GHz to 300 GHz<br/>Properties: Unidirectional, parabolic dish, Line-of-Sight, rain absorption<br/>Uses: Satellite Links, Terrestrial Cellular, Wi-Fi (2.4/5GHz), Radar"]
-        
-        INFRA["Infrared Waves<br/>Band: 300 GHz to 400 THz<br/>Properties: Short-range, strictly line-of-sight, cannot penetrate solid walls<br/>Uses: Television Remotes, IrDA ports, optocouplers"]
-    end
-```
+![Figure 1.29: Unguided Electromagnetic Wireless Frequency Bands](figures/fig1_29_em_spectrum.svg)
 
 ### Detailed Evaluation of the Three Wireless Classes
 

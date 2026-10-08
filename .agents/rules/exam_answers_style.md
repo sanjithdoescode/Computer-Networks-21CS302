@@ -16,11 +16,10 @@ Every question MUST be structured with the following core components:
 1. **Foundational Introduction & Motivation**:
    - Historical context, design rationale, and why the concept exists.
    - Formal definitions and core objectives.
-2. **Architectural & Operational Diagrams (Mermaid)**:
-   - Provide **at least 2 to 5 dedicated Mermaid diagrams** per question.
-   - Use only strictly supported types: `flowchart TD`, `flowchart LR`, `sequenceDiagram`, `stateDiagram-v2`.
-   - Quote node labels containing spaces, parentheses, or brackets (`id["Label (Extra)"]`).
-   - Never use unsupported diagram types like `gantt`.
+2. **Architectural & Operational Diagrams (Publication-Grade Vector SVGs)**:
+   - Provide **at least 2 to 5 dedicated publication-grade vector figures** per question.
+   - Reference as standalone SVGs in `UNIT - X/figures/` (generated via D2, Python 32-bit packet engine, Matplotlib scientific plots, or Graphviz FSMs).
+   - In-line Mermaid blocks are deprecated due to poor rendering; all diagrams must be vector-sharp and publication-grade.
 3. **Deep Structural Breakdown**:
    - Detailed subsections for every sub-technique, layer, class, or sub-protocol.
    - ASCII bit-level header formats for protocols (e.g., IPv4, TCP, UDP, OSPF, RIP) with bit-by-bit field explanations.

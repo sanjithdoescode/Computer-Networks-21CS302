@@ -50,32 +50,14 @@
 
 The **Data Link Layer (DLL)** operates at Layer 2 of the ISO-OSI 7-layer model, positioned directly between the **Physical Layer (Layer 1)** and the **Network Layer (Layer 3)**.
 
-```mermaid
-flowchart TD
-    subgraph DeliveryScopes["Comparison of Layer Responsibilities"]
-        direction TB
-        L3["Network Layer (Layer 3): Host-to-Host Delivery across Inter-Networks<br/>(Logical IP Addressing)"]
-        L2["Data Link Layer (Layer 2): Hop-to-Hop / Node-to-Node Delivery across a Single Link<br/>(Physical MAC Addressing & Framing)"]
-        L1["Physical Layer (Layer 1): Unstructured Raw Bit Transmission over Physical Conduits<br/>(Voltages, Light Pulses, Radio Frequencies)"]
-        
-        L3 ===> L2 ===> L1
-    end
-```
+![Figure 2.1: Comparison of Layer Responsibilities & Delivery Scopes](figures/fig2_01_layer_responsibilities.svg)
 
 ### Core Objective
 The raw physical layer provides an error-prone, unstructured transmission stream of `0`s and `1`s subject to electrical noise, signal attenuation, and collisions. The primary objective of the Data Link Layer is to **transform this raw, imperfect physical transmission conduit into an error-free, reliable hop-to-hop communication link** for the upper Network Layer.
 
 While the Network Layer oversees packet delivery between end-hosts across thousands of miles, the Data Link Layer is responsible exclusively for moving data frames from one physical interface to the next adjacent physical interface connected to the same physical cable or wireless link (e.g., from Workstation A to Switch 1, or Switch 1 to Router 1).
 
-```mermaid
-flowchart LR
-    HOST_A["Host A"] -->|"Hop 1: Ethernet Frame"| SW["Switch 1"]
-    SW -->|"Hop 2: Ethernet Frame"| RTR1["Router 1"]
-    RTR1 -->|"Hop 3: HDLC / PPP Frame"| RTR2["Router 2"]
-    RTR2 -->|"Hop 4: Wi-Fi 802.11 Frame"| HOST_B["Host B"]
-
-    HOST_A -.->|"End-to-End Logical Network Packet (Layer 3)"| HOST_B
-```
+![Figure 2.2: Hop-by-Hop Link Layer Framing & Hardware Addressing](figures/fig2_02_hop_by_hop_framing.svg)
 
 ---
 
@@ -83,25 +65,7 @@ flowchart LR
 
 In the late 1970s, the IEEE realized that local area networks (LANs) share common link-layer requirements (flow control, multiplexing) but differ widely in their physical media access mechanics (Ethernet coaxial/twisted-pair, Token Ring, wireless radio). Consequently, IEEE Project 802 split the Data Link Layer into two functional sublayers:
 
-```mermaid
-flowchart TD
-    subgraph OSI_L2["Data Link Layer (OSI Layer 2)"]
-        LLC["1. Logical Link Control (LLC - IEEE 802.2)<br/>- Independent of physical media<br/>- Protocol Multiplexing (Service Access Points - SAPs)<br/>- Hop-to-hop Flow Control & Error Notifications"]
-        MAC["2. Media Access Control (MAC)<br/>- Closely coupled to physical media<br/>- Framing & Physical 48-bit MAC Addressing<br/>- Channel Contention Arbitration (CSMA/CD, CSMA/CA, Token Passing)"]
-        
-        LLC --- MAC
-    end
-
-    subgraph PHY_STANDARDS["Underlying Physical & MAC Technologies"]
-        ETH["IEEE 802.3<br/>(Ethernet)"]
-        WIFI["IEEE 802.11<br/>(Wi-Fi)"]
-        TR["IEEE 802.5<br/>(Token Ring)"]
-    end
-
-    MAC --> ETH
-    MAC --> WIFI
-    MAC --> TR
-```
+![Figure 2.3: Data Link Layer Sublayer Division: LLC vs. MAC](figures/fig2_03_llc_mac_sublayers.svg)
 
 ### 1. Logical Link Control (LLC) Sublayer (IEEE 802.2)
 - **Media Independence**: Provides a uniform software interface to the Network Layer regardless of whether the underlying transmission medium is copper wire, fiber-optic cable, or wireless radio frequency.
@@ -119,14 +83,7 @@ flowchart TD
 
 Because the physical layer delivers an unbroken stream of raw binary bits, the Data Link Layer must divide this bitstream into distinct, manageable data blocks called **Frames**. To enable the receiver to identify where one frame ends and the next frame begins, the Data Link Layer implements **Framing**.
 
-```mermaid
-flowchart LR
-    STREAM["Raw Bit Stream: ...0101101111110001010101111110..."]
-    
-    FRAME["Demarcated Data Link Frame:<br/>[ Starting Flag | Frame Header | Data Payload | Frame Trailer | Ending Flag ]"]
-    
-    STREAM -->|"Framing Synchronization"| FRAME
-```
+![Figure 2.4: Fundamental Link-Layer Framing Methodologies](figures/fig2_04_framing_techniques.svg)
 
 ### Primary Framing Methods:
 
@@ -152,17 +109,7 @@ Receiver Extracts:       [ DATA ] [ FLAG ] [ DATA ] [ ESC  ] [ DATA ]
 - *The Rule*: Whenever the transmitting Data Link Layer detects **five consecutive `1`s** (`11111`) in the data payload, it **automatically injects (stuffs) a `0` bit** into the outgoing bitstream, regardless of whether the next bit is a `0` or a `1`.
 - *Receiver De-Stuffing*: The receiver continuously monitors incoming bits. If it detects five consecutive `1`s followed by a `0`, it **automatically discards (un-stuffs) the `0` bit**. If it detects five consecutive `1`s followed by a `1` and a `0` (`01111110`), it recognizes a legitimate frame boundary flag.
 
-```mermaid
-flowchart TD
-    subgraph BitStuffingWalkthrough["Bit Stuffing Walkthrough: Flag = 01111110"]
-        IN["Original Payload: 0110111111011111001"]
-        STUFF["Sender Stuffs '0' after five 1s:<br/>011011111 0 1011111 0 001"]
-        WIRE["Transmitted Frame: [01111110] [011011111010111110001] [01111110]"]
-        DESTUFF["Receiver Detects '111110' -> Drops Stuffed '0':<br/>0110111111011111001"]
-        
-        IN --> STUFF --> WIRE --> DESTUFF
-    end
-```
+![Figure 2.5: Bit Stuffing Protocol Execution Walkthrough](figures/fig2_05_bit_stuffing_walkthrough.svg)
 
 ---
 
@@ -210,20 +157,7 @@ Raw physical signals are susceptible to noise bursts that corrupt bits. Error co
 
 When multiple stations connect to a shared communication medium (e.g., traditional coaxial bus Ethernet or shared Wi-Fi radio channels), simultaneous transmissions collide, producing garbled, unusable waveforms. The Data Link Layer enforces **Multiple Access Protocols** to arbitrate channel access:
 
-```mermaid
-flowchart TD
-    MAC_PROTO["Multiple Access Protocols (MAC Sublayer)"]
-    
-    RAND["1. Random Access Protocols<br/>(No central controller, stations contend)<br/>- Pure ALOHA / Slotted ALOHA<br/>- CSMA (Carrier Sense Multiple Access)<br/>- CSMA/CD (Collision Detection - Ethernet)<br/>- CSMA/CA (Collision Avoidance - Wi-Fi)"]
-    
-    CTRL["2. Controlled Access Protocols<br/>(Stations consult each other or central master)<br/>- Reservation Systems<br/>- Polling (Primary / Secondary)<br/>- Token Passing (Token Ring / FDDI)"]
-    
-    CHAN["3. Channelization Protocols<br/>(Bandwidth shared via multiplexing)<br/>- FDMA (Frequency Division)<br/>- TDMA (Time Division)<br/>- CDMA (Code Division Multiple Access)"]
-    
-    MAC_PROTO --> RAND
-    MAC_PROTO --> CTRL
-    MAC_PROTO --> CHAN
-```
+![Figure 2.6: Multiple Access Control (MAC) Arbitration Taxonomy](figures/fig2_06_mac_protocols_taxonomy.svg)
 
 ---
 
@@ -247,20 +181,7 @@ flowchart TD
 
 Data communication systems disseminate information between nodes using different **Addressing and Forwarding Paradigms** depending on whether traffic is intended for a single destination, a designated interest group, or all devices across a network.
 
-```mermaid
-flowchart TD
-    PARADIGMS["Network Dissemination Paradigms"]
-    
-    UNI["1. UNICAST<br/>One-to-One (Point-to-Point)<br/>Single Sender -> Single Receiver"]
-    MULTI["2. MULTICAST<br/>One-to-Many (Group Selective)<br/>Single Sender -> Subscribed Receivers"]
-    BROAD["3. BROADCAST<br/>One-to-All (Indiscriminate Flooding)<br/>Single Sender -> All Nodes in Domain"]
-    ANY["4. ANYCAST<br/>One-to-Nearest (Topological Proximity)<br/>Single Sender -> Closest of Multiple Replicas"]
-    
-    PARADIGMS --> UNI
-    PARADIGMS --> MULTI
-    PARADIGMS --> BROAD
-    PARADIGMS --> ANY
-```
+![Figure 2.7: Four Transmission Dissemination Paradigms](figures/fig2_07_dissemination_paradigms.svg)
 
 ---
 
@@ -269,12 +190,7 @@ flowchart TD
 ### Definition
 **Unicast** is a point-to-point communication paradigm in which a message is transmitted from a **single source host to a single, uniquely identifiable destination host**.
 
-```mermaid
-flowchart LR
-    SRC["Source Host A<br/>IP: 192.168.1.10"] ===>|"Dedicated Data Stream"| DST["Destination Host B<br/>IP: 192.168.1.20"]
-    H3["Host C (Ignored)"]
-    H4["Host D (Ignored)"]
-```
+![Figure 2.8: Unicast Point-to-Point Frame Transmission](figures/fig2_08_unicast_flow.svg)
 
 ### Addressing Mechanics
 - **Layer 2 (Data Link)**: The destination field contains the unique 48-bit MAC address of the target machine. The **Individual/Group (I/G) bit** (least significant bit of the first octet) is explicitly set to `0`:
@@ -296,17 +212,7 @@ flowchart LR
 ### Definition
 **Broadcast** is a one-to-all communication model where a message sent by a single host is **received and processed by every single active host within the local broadcast domain**.
 
-```mermaid
-flowchart TD
-    SRC["Transmitting Host"]
-    SW["Layer 2 Switch<br/>(Floods Frame out ALL ports)"]
-    
-    SRC --> SW
-    SW ===> H1["Host 1 (Processes Frame)"]
-    SW ===> H2["Host 2 (Processes Frame)"]
-    SW ===> H3["Host 3 (Processes Frame)"]
-    SW ===> H4["Host 4 (Processes Frame)"]
-```
+![Figure 2.9: Broadcast One-to-All Flooding in Local Broadcast Domain](figures/fig2_09_broadcast_flow.svg)
 
 ### 1. Limited Broadcast vs. Directed Broadcast
 - **Limited Broadcast (Local Segment)**:
@@ -329,19 +235,7 @@ Because every broadcast frame forces every receiving host's network interface ca
 ### Definition
 **Multicast** is an efficient one-to-many communication model where a single stream of packets is delivered simultaneously to a **specific group of subscribed hosts**, without transmitting copies to uninterested nodes.
 
-```mermaid
-flowchart TD
-    SRC["Video Streaming Server"]
-    RTR["Multicast Router"]
-    
-    SRC -->|"Single Stream"| RTR
-    
-    RTR ===>|"Replicated Stream"| H1["Host 1 (Subscribed)"]
-    RTR ===>|"Replicated Stream"| H3["Host 3 (Subscribed)"]
-    
-    RTR -.-x|"No Traffic Sent"| H2["Host 2 (Not Subscribed)"]
-    RTR -.-x|"No Traffic Sent"| H4["Host 4 (Not Subscribed)"]
-```
+![Figure 2.10: Multicast One-to-Many Group Forwarding with IGMP Snooping](figures/fig2_10_multicast_flow.svg)
 
 ### Addressing Architecture
 
@@ -356,15 +250,7 @@ To transmit a Layer 3 multicast packet over Ethernet, the destination IP must be
 - In this reserved block, the upper 25 bits are permanently fixed to `01:00:5E` + a leading `0` bit, leaving **only 23 bits** available to carry the multicast group address.
 - However, an IPv4 Class D address contains **28 bits of group identifier** (32 bits minus the 4-bit `1110` prefix).
 
-```mermaid
-flowchart TD
-    subgraph MappingAmbiguity["The 32:1 Multicast Mapping Ambiguity"]
-        IP["IPv4 Class D Address: 32 bits<br/>[ 1 1 1 0 | 5 bits Lost | Lower 23 Bits Mapped ]"]
-        MAC["Ethernet Multicast MAC: 48 bits<br/>[ 01 : 00 : 5E : 0 | Lower 23 Bits Copied ]"]
-        
-        IP -->|"5 Bits Ignored!"| MAC
-    end
-```
+![Figure 2.11: The 32:1 IP Multicast to Ethernet MAC Mapping Ambiguity](figures/fig2_11_multicast_mac_ambiguity.svg)
 
 - **The Mathematical Result**: Because 5 bits of the IP multicast address are ignored during mapping, $2^5 = \mathbf{32 \text{ distinct IP multicast addresses}}$ map to the exact same Ethernet MAC address!
 - *Example*: `224.1.1.1` and `224.129.1.1` map to the identical MAC: `01:00:5E:01:01:01`. The receiving host's network card accepts both frames, but the operating system's IP stack discards the unwanted group's packets after inspecting the Layer 3 header.
@@ -375,21 +261,7 @@ flowchart TD
 
 In **Anycast**, the same IP address is assigned to multiple geographically distributed servers across the world.
 
-```mermaid
-flowchart LR
-    USER["Client User<br/>(Queries 8.8.8.8)"]
-    
-    RTR["BGP Core Router<br/>(Selects Shortest Path Tree)"]
-    
-    S1[("Server Replica 1<br/>Tokyo: 8.8.8.8<br/>Cost = 140ms")]
-    S2[("Server Replica 2<br/>Frankfurt: 8.8.8.8<br/>Cost = 90ms")]
-    S3[("Server Replica 3<br/>Mumbai: 8.8.8.8<br/>Cost = 15ms (NEAREST!)")]
-    
-    USER --> RTR
-    RTR ===>|"Routes to Nearest Instance"| S3
-    RTR -.-x S1
-    RTR -.-x S2
-```
+![Figure 2.12: Anycast One-to-Nearest BGP Routing to Closest Edge](figures/fig2_12_anycast_routing.svg)
 
 - When a client transmits a packet to an anycast address, intermediate BGP routers use standard routing metrics to route the packet to the **single topologically closest server replica**.
 - If a server replica crashes, BGP withdraws the route, and traffic automatically reroutes to the next closest instance.
@@ -419,13 +291,7 @@ flowchart LR
 
 In the TCP/IP protocol suite, communication is governed by two distinct addressing schemes operating at different architectural layers:
 
-```mermaid
-flowchart TD
-    subgraph AddressDuality["The Two Fundamental Addressing Spaces"]
-        L3_ADDR["Logical IP Address (Layer 3 - 32 bits)<br/>- Hierarchical, location-dependent<br/>- Used by Network Layer software to route across subnets"]
-        L2_ADDR["Physical MAC Address (Layer 2 - 48 bits)<br/>- Flat, permanent hardware address<br/>- Used by Network Interface Cards (NICs) to deliver frames over physical wire"]
-    end
-```
+![Figure 2.13: Logical IP vs. Physical MAC Addressing Duality](figures/fig2_13_ip_vs_mac_addressing.svg)
 
 When an application wants to send data to an IP address, the network layer creates an IP packet. However, to transmit that packet across an Ethernet or Wi-Fi local network, the Data Link Layer must encapsulate the packet into a frame containing the **Destination MAC Address**. 
 
@@ -476,24 +342,7 @@ ARP packets are encapsulated directly inside Layer 2 frames (EtherType **`0x0806
 
 ## 3.3 The ARP Resolution Cycle: Broadcast Request & Unicast Reply
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant HostA as Host A (192.168.1.10 / MAC: 00:AA)
-    participant Switch as Layer 2 Switch
-    participant HostB as Host B (192.168.1.20 / MAC: 00:BB)
-    participant HostC as Host C (192.168.1.30 / MAC: 00:CC)
-    
-    Note over HostA: Application generates packet for 192.168.1.20.<br/>Checks local ARP cache: MISS!
-    HostA->>Switch: 1. ARP Request (Broadcast: Dst MAC = FF:FF:FF:FF:FF:FF)<br/>"Who has 192.168.1.20? Tell 192.168.1.10 (00:AA)"
-    Switch->>HostB: Floods broadcast frame to Host B
-    Switch->>HostC: Floods broadcast frame to Host C
-    Note over HostC: Inspects Target IP: 192.168.1.20.<br/>Does not match my IP! Discards frame silently.
-    Note over HostB: Matches my IP!<br/>Updates ARP cache with Host A mapping (192.168.1.10 <-> 00:AA).
-    HostB-->>Switch: 2. ARP Reply (Unicast: Dst MAC = 00:AA)<br/>"192.168.1.20 is at MAC 00:BB"
-    Switch-->>HostA: Delivers Unicast reply to Host A
-    Note over HostA: Updates local ARP cache.<br/>Encapsulates pending IP packet into Ethernet frame (Dst: 00:BB)!
-```
+![Figure 2.14: Address Resolution Protocol (ARP) Request-Reply Cycle](figures/fig2_14_arp_resolution_cycle.svg)
 
 ### The Two Steps Explained:
 1. **ARP Request (Broadcast)**:
@@ -543,27 +392,7 @@ A router intercepts an ARP Request from a local host looking for a remote host o
 
 ## 3.6 Complete ARP Protocol Flowchart
 
-```mermaid
-flowchart TD
-    START["Host wants to send packet to Target IP"] --> CHECK_CACHE{"Is Target IP in<br/>local ARP Cache?"}
-    
-    CHECK_CACHE -- Yes (Hit) --> GET_MAC["Retrieve Target MAC from table"]
-    GET_MAC --> ENCAP["Encapsulate IP Packet into Ethernet Frame<br/>Dst MAC = Target MAC"]
-    ENCAP --> SEND_WIRE["Transmit Frame over Physical Medium"]
-    
-    CHECK_CACHE -- No (Miss) --> QUEUE["Queue IP Packet in memory buffer"]
-    QUEUE --> BUILD_REQ["Construct ARP Request:<br/>Target MAC = 00:00:00:00:00:00<br/>Opcode = 1 (Request)"]
-    BUILD_REQ --> BCAST["Broadcast Frame to FF:FF:FF:FF:FF:FF"]
-    
-    BCAST --> WAIT_REP{"Received ARP Reply<br/>within timeout?"}
-    WAIT_REP -- No --> RETRY{"Exceeded Retry Count?"}
-    RETRY -- No --> BCAST
-    RETRY -- Yes --> DROP_ERR["Drop Packet & Report Host Unreachable"]
-    
-    WAIT_REP -- Yes --> UPDATE_TAB["Update local ARP Cache Table<br/>(Target IP <-> Target MAC)"]
-    UPDATE_TAB --> DEQUEUE["Dequeue buffered IP packet"]
-    DEQUEUE --> ENCAP
-```
+![Figure 2.15: Complete ARP Resolution Algorithm Flowchart](figures/fig2_15_arp_flowchart.svg)
 
 ---
 
@@ -573,14 +402,7 @@ flowchart TD
 
 During the early computing era of the 1980s, computer hardware was exceptionally costly. To minimize capital expenditures and improve centralized security in academic and corporate environments, organizations deployed **Diskless Workstations** (terminals without internal hard drives or persistent non-volatile storage).
 
-```mermaid
-flowchart TD
-    subgraph DisklessBootProblem["The Bootstrap Dilemma of Diskless Workstations"]
-        ROM["Firmware in ROM<br/>Contains hardwired 48-bit MAC address on NIC"]
-        PROBLEM["Dilemma: No local hard disk to store IP configuration!<br/>How can a machine communicate on TCP/IP without an IP?"]
-        ROM --> PROBLEM
-    end
-```
+![Figure 2.16: The Bootstrap Dilemma of Diskless Workstations](figures/fig2_16_diskless_boot_dilemma.svg)
 
 When a diskless workstation powered on, its bootstrap code in Read-Only Memory (ROM) could access its burned-in **48-bit Physical MAC Address** from the Network Interface Card. However, it had no persistent storage from which to read its **32-bit Logical IP Address**.
 
@@ -625,21 +447,7 @@ RARP was designed as an extension of ARP, reusing the identical 28-byte packet s
 
 ## 4.3 Operational Workflow: Broadcast Request and Unicast Reply
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as Diskless Client (MAC: 00:11:22:33:44:55)
-    participant Switch as Layer 2 Switch
-    participant Server as Designated RARP Server
-    
-    Note over Client: Machine Powers On.<br/>Reads burned-in MAC from NIC.
-    Client->>Switch: 1. RARP Request (Broadcast: Dst MAC = FF:FF:FF:FF:FF:FF)<br/>EtherType 0x8035: "My MAC is 00:11:22:33:44:55. What is my IP?"
-    Switch->>Server: Floods broadcast to RARP Server
-    Note over Server: RARP daemon receives frame.<br/>Queries local /etc/ethers configuration table.<br/>Finds match: 00:11:22:33:44:55 -> 192.168.1.150!
-    Server-->>Switch: 2. RARP Reply (Unicast: Dst MAC = 00:11:22:33:44:55)<br/>EtherType 0x8035: "Your IP is 192.168.1.150"
-    Switch-->>Client: Delivers Unicast frame to client
-    Note over Client: Configures local IP stack with 192.168.1.150!<br/>Begins TFTP boot sequence to download OS kernel.
-```
+![Figure 2.17: Reverse ARP (RARP) Broadcast Request & Unicast Reply Workflow](figures/fig2_17_rarp_workflow.svg)
 
 ### Operational Steps:
 1. Upon boot, the client constructs a RARP Request (`Opcode = 3`), inserts its physical MAC address into the payload, and encapsulates it in an Ethernet frame addressed to `FF:FF:FF:FF:FF:FF`.
@@ -653,14 +461,7 @@ sequenceDiagram
 
 Although RARP successfully solved the initial diskless workstation dilemma, it suffered from severe architectural limitations:
 
-```mermaid
-flowchart TD
-    subgraph RARP_Flaws["Why RARP Was Abandoned"]
-        F1["1. Operates at Layer 2 (Data Link)<br/>Raw Ethernet frames cannot cross Layer 3 routers!<br/>Requires a physical RARP server on EVERY single LAN cable segment."]
-        F2["2. Extremely Incomplete Configuration<br/>Returns ONLY an IP address.<br/>Cannot supply Subnet Mask, Default Gateway, or DNS Servers!"]
-        F3["3. Inflexible Static Configuration<br/>Administrators had to manually enter every MAC address into server files.<br/>Zero dynamic address pooling or lease reclamation."]
-    end
-```
+![Figure 2.18: Architectural Limitations Leading to RARP Deprecation](figures/fig2_18_rarp_deprecation.svg)
 
 1. **Non-Routable (Layer 2 Confinement)**: Because RARP operates directly over raw Ethernet frames without an IP header, routers block RARP broadcasts. A multi-subnet enterprise network had to deploy and maintain an expensive physical RARP server on **every individual subnet**.
 2. **Incomplete Network Parameters**: An IP address alone is insufficient for modern internetworking. RARP could not deliver:
@@ -675,16 +476,7 @@ flowchart TD
 
 To overcome RARP's fatal limitations, the IETF developed two successive generations of host configuration protocols:
 
-```mermaid
-flowchart LR
-    RARP_STAGE["RARP (RFC 903)<br/>- Layer 2 Raw Frame<br/>- Non-routable<br/>- IP only"]
-    
-    BOOTP_STAGE["BOOTP (RFC 951)<br/>- Layer 7 via UDP 67/68<br/>- Crosses routers via Relay Agents<br/>- Delivers IP, Gateway, Boot Image Path"]
-    
-    DHCP_STAGE["DHCP (RFC 2131)<br/>- Dynamic IP Pooling & Leases<br/>- Automated Reclaim<br/>- Complete Options (DNS, Mask, MTU)"]
-    
-    RARP_STAGE -->|"Replaced by"| BOOTP_STAGE -->|"Evolved into"| DHCP_STAGE
-```
+![Figure 2.19: Host Bootstrap Protocol Evolution: RARP to BOOTP to DHCP](figures/fig2_19_bootstrap_evolution.svg)
 
 1. **Bootstrap Protocol (BOOTP - RFC 951)**: Moved configuration up to the **Application Layer**, running over standard **UDP Ports 67 and 68**. Because BOOTP packets are encapsulated inside IP datagrams, routers equipped with **BOOTP Relay Agents** could forward client requests across subnets to a single centralized server. Furthermore, BOOTP delivered the default gateway and TFTP boot filename.
 2. **Dynamic Host Configuration Protocol (DHCP - RFC 2131)**: Built directly upon the BOOTP message format, adding **dynamic address pooling**, **temporary lease times**, and extensible **Option fields** (DNS, subnet mask, domain name).
@@ -712,14 +504,7 @@ flowchart LR
 
 During transmission across physical media (copper wires, fiber-optic glass, wireless air), electromagnetic signals are distorted by thermal noise, lightning surges, cross-talk from adjacent cables, and multipath fading. These physical impairments alter signal voltage levels, causing the receiver to interpret transmitted bits incorrectly.
 
-```mermaid
-flowchart TD
-    subgraph ErrorTaxonomy["Classification of Transmission Errors"]
-        SBE["1. Single-Bit Error<br/>Exactly ONE bit is flipped in the data block<br/>(e.g., 00101101 -> 00100101)<br/>Occurs in low-speed, isolated white-noise channels"]
-        
-        BE["2. Burst Error<br/>TWO OR MORE consecutive or dispersed bits are corrupted<br/>(Length = distance from first to last corrupted bit)<br/>Dominates high-speed wired and wireless networks"]
-    end
-```
+![Figure 2.20: Classification of Physical Transmission Errors](figures/fig2_20_transmission_error_taxonomy.svg)
 
 - **Single-Bit Errors**: Rare in high-speed digital communications because physical noise bursts typically endure for durations far longer than a single bit interval ($T_b = 1/R$).
 - **Burst Errors**: If a noise spike lasts for $1\text{ millisecond}$ ($0.001\text{ s}$) on a $1\text{ Gbps}$ Gigabit Ethernet link, the number of corrupted bits is:
@@ -772,20 +557,7 @@ $$\mathbf{d_{\text{min}} \ge 2t + 1}$$
 ### 2. Two-Dimensional Parity (LRC / VRC)
 Organizes data bits into a rectangular two-dimensional matrix of $m$ rows and $k$ columns:
 
-```mermaid
-flowchart TD
-    subgraph TwoDimParityMatrix["Two-Dimensional (2D) Parity Generation"]
-        direction TB
-        R1["Row 1:  1  0  1  1  0  0  1  | Row Parity: 0"]
-        R2["Row 2:  0  1  1  0  1  0  1  | Row Parity: 1"]
-        R3["Row 3:  1  1  0  1  0  1  0  | Row Parity: 0"]
-        R4["Row 4:  0  0  1  0  1  1  0  | Row Parity: 1"]
-        
-        COL_PAR["Col Par: 0  0  1  0  0  0  0  | Corner Par: 0"]
-        
-        R1 --- R2 --- R3 --- R4 --- COL_PAR
-    end
-```
+![Figure 2.21: Two-Dimensional (2D) Parity Generation Matrix](figures/fig2_21_2d_parity_matrix.svg)
 
 - **Row Parity (VRC - Vertical Redundancy Check)**: Computed for each individual row.
 - **Column Parity (LRC - Longitudinal Redundancy Check)**: Computed down each individual column.
@@ -828,13 +600,7 @@ Suppose sender transmits two 8-bit numbers: `10011001` and `11100010`.
 
 The **Cyclic Redundancy Check (CRC)** is the most robust and widely deployed error-detection mechanism in data link protocols (Ethernet, Wi-Fi, HDLC). It is based on **binary polynomial division using Modulo-2 arithmetic** (XOR logic with no carries or borrows).
 
-```mermaid
-flowchart LR
-    M_DATA["Data Message M(x)<br/>(k bits)"] --> APPEND["Append r Zeroes to Message:<br/>M(x) * 2^r"]
-    APPEND --> DIVIDE["Modulo-2 Binary Division by<br/>Generator Polynomial G(x) of degree r"]
-    DIVIDE --> REMAINDER["Remainder R(x) = CRC Checksum (r bits)"]
-    REMAINDER --> TRANSMIT["Transmitted Frame T(x):<br/>[ Message M(x) ] + [ CRC Remainder R(x) ]"]
-```
+![Figure 2.22: CRC Modulo-2 Polynomial Division Mechanics](figures/fig2_22_crc_polynomial_flow.svg)
 
 ### Step-by-Step Mathematical Walkthrough
 Let:

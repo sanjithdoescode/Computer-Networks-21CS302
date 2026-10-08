@@ -67,19 +67,7 @@
 
 The **HyperText Transfer Protocol (HTTP)** is the application-level backbone protocol of the World Wide Web. Conceived by Tim Berners-Lee at CERN in 1989 and standardized across multiple IETF RFC specifications (RFC 1945 for HTTP/1.0, RFC 2616 and RFC 7230–7235 for HTTP/1.1, RFC 7540 for HTTP/2, and RFC 9114 for HTTP/3), HTTP defines how web clients (browsers) request hypermedia documents from distributed origin servers.
 
-```mermaid
-flowchart TD
-    subgraph WebArch["Universal Web Architecture"]
-        Client["Web Client (Browser / User Agent)"]
-        Cache["Forward / Reverse Proxy & CDN Cache"]
-        Server["Origin Web Server (Apache, Nginx, Node.js)"]
-        Database["Backend Storage / Microservices"]
-
-        Client <===>|"HTTP Request / Response"| Cache
-        Cache <===>|"HTTP / TLS / TCP"| Server
-        Server <===>|"Internal Queries"| Database
-    end
-```
+![Figure 5.1: Universal Web Architecture & Cache Hierarchy](figures/fig5_01_web_architecture.svg)
 
 HTTP functions as a **stateless, extensible, client-server protocol**:
 - **Stateless**: The server maintains no intrinsic memory of previous client transactions. Every request is evaluated in total isolation, simplifying server horizontal scalability.
@@ -91,21 +79,7 @@ HTTP functions as a **stateless, extensible, client-server protocol**:
 
 The operational lifecycle of an HTTP transaction follows a synchronous request-reply model:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Browser as "Client (Web Browser)"
-    participant DNS as "DNS Resolver"
-    participant Server as "Origin Server (:80 / :443)"
-
-    Browser->>DNS: Resolve Hostname (e.g., example.com)
-    DNS-->>Browser: IP Address (93.184.216.34)
-    Browser->>Server: Establish Transport Channel (TCP Handshake)
-    Browser->>Server: HTTP Request (Method, URI, Headers, Body)
-    Note over Server: Server parses URI, verifies permissions,<br/>executes scripts, generates response
-    Server-->>Browser: HTTP Response (Status Code, Headers, Payload)
-    Note over Browser: Browser renders HTML, discovers sub-resources (CSS/JS/Images),<br/>and initiates secondary requests
-```
+![Figure 5.2: HTTP Request-Response Transaction Lifecycle](figures/fig5_02_http_lifecycle.svg)
 
 ### HTTP Request Methods (Verbs)
 1. **`GET`**: Requests a representation of the specified resource. Must be **safe** (produces no side effects on server state) and **idempotent** (multiple identical requests yield identical server state).
@@ -120,16 +94,7 @@ sequenceDiagram
 ### HTTP Response Status Code Taxonomy
 HTTP status codes are 3-digit integers categorized into five functional classes:
 
-```mermaid
-flowchart LR
-    S1["1xx: Informational<br/>(100 Continue, 101 Switching Protocols)"]
-    S2["2xx: Success<br/>(200 OK, 201 Created, 204 No Content)"]
-    S3["3xx: Redirection<br/>(301 Moved Permanently, 304 Not Modified)"]
-    S4["4xx: Client Error<br/>(400 Bad Request, 401 Unauthorized, 404 Not Found)"]
-    S5["5xx: Server Error<br/>(500 Internal Error, 502 Bad Gateway, 503 Unavailable)"]
-
-    S1 --- S2 --- S3 --- S4 --- S5
-```
+![Figure 5.3: HTTP Response Status Code 5-Tier Taxonomy](figures/fig5_03_http_status_codes.svg)
 
 ---
 
@@ -209,17 +174,7 @@ Connection: keep-alive
 
 The history of HTTP reflects an ongoing effort to reduce web latency and optimize transport resource utilization:
 
-```mermaid
-flowchart TD
-    H10["HTTP/1.0 (RFC 1945)<br/>Non-Persistent Connections<br/>New TCP Handshake per Object!"]
-    H11["HTTP/1.1 (RFC 2616)<br/>Persistent Connections (Keep-Alive)<br/>Pipelining (Suffers Head-of-Line Blocking)"]
-    H20["HTTP/2 (RFC 7540)<br/>Binary Framing Layer<br/>Multiplexed Streams over Single TCP<br/>HPACK Header Compression"]
-    H30["HTTP/3 (RFC 9114)<br/>Runs over QUIC / UDP<br/>Zero TCP Head-of-Line Blocking<br/>0-RTT Handshakes & Conn Migration"]
-
-    H10 ==>|"Evolution 1999"| H11
-    H11 ==>|"Evolution 2015"| H20
-    H20 ==>|"Evolution 2022"| H30
-```
+![Figure 5.4: Generational Evolution of HTTP (1.0 to 3 over QUIC)](figures/fig5_04_http_evolution.svg)
 
 ### 1. HTTP/1.0: Non-Persistent Connections
 - Opened a brand-new TCP connection for every single inline web object (HTML file, CSS stylesheet, JavaScript bundle, JPEG image).
@@ -240,21 +195,7 @@ $$\text{Total Latency} = 2 \times \text{RTT} + \frac{\text{Object Size}}{\text{B
 - **HPACK Compression**: Headers are compressed using static and dynamic lookup tables plus Huffman coding, slashing header byte overhead by up to $85\%$.
 - **Server Push**: Servers can proactively push dependent resources (e.g., CSS stylesheets) into client caches before the client parses the HTML and asks for them.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Browser as "HTTP/2 Client"
-    participant Server as "HTTP/2 Server"
-
-    Note over Browser,Server: Single TCP Connection Established
-    Browser->>Server: Stream 1 (HEADERS: GET /style.css)
-    Browser->>Server: Stream 3 (HEADERS: GET /app.js)
-    Server-->>Browser: Stream 3 (DATA: Chunk of app.js)
-    Server-->>Browser: Stream 1 (DATA: Chunk of style.css)
-    Server-->>Browser: Stream 3 (DATA: Final Chunk app.js)
-    Server-->>Browser: Stream 1 (DATA: Final Chunk style.css)
-    Note over Browser,Server: Streams Interleaved Concurrently Without Blocking!
-```
+![Figure 5.5: HTTP/2 Binary Framing & Stream Multiplexing](figures/fig5_05_http2_multiplexing.svg)
 
 ### 4. HTTP/3: QUIC over UDP
 - While HTTP/2 solved application-level HoL blocking, it remained vulnerable to **Transport-Level Head-of-Line Blocking** in TCP: if a single TCP packet carrying Stream 1 is lost, TCP pauses delivery of all other streams (Stream 3, Stream 5) until the lost packet is retransmitted.
@@ -303,30 +244,7 @@ Because HTTP is stateless, stateful sessions (shopping carts, user logins) rely 
 
 Electronic mail operates as a store-and-forward distributed architecture defined by **RFC 5321 (SMTP)** and **RFC 5322 (Internet Message Format)**. Unlike interactive protocols, email must navigate disconnected topologies, network partitions, and asynchronous delivery.
 
-```mermaid
-flowchart LR
-    subgraph SenderDomain["Sender Domain (alice@example.com)"]
-        MUA_S["Mail User Agent (MUA)<br/>(Thunderbird, Outlook)"]
-        MSA["Mail Submission Agent (MSA)<br/>(Port 587 / Auth SMTP)"]
-        MTA_S["Sender MTA<br/>(Postfix, Exim)"]
-        MUA_S -->|"Submit"| MSA
-        MSA --> MTA_S
-    end
-
-    subgraph InternetCore["Internet Transit (DNS MX Lookups)"]
-        MTA_S ==>|"SMTP Relay (Port 25)"| MTA_R["Receiver MTA<br/>(Incoming Gateway)"]
-    end
-
-    subgraph ReceiverDomain["Receiver Domain (bob@destination.org)"]
-        MDA["Mail Delivery Agent (MDA)<br/>(Dovecot, Maildrop)"]
-        MBOX[("User Mailbox Storage<br/>(Maildir / Mbox)")]
-        MUA_R["Receiver MUA<br/>(Client Device)"]
-
-        MTA_R --> MDA
-        MDA --> MBOX
-        MBOX -.->|"POP3 (:110) or IMAP4 (:143)"| MUA_R
-    end
-```
+![Figure 5.6: SMTP Electronic Mail Architecture (MUA, MSA, MTA, MDA)](figures/fig5_06_smtp_mail_architecture.svg)
 
 ### The Architectural Actors
 1. **Mail User Agent (MUA)**: The end-user application (e.g., Thunderbird, Apple Mail) used to compose, read, and organize emails.
@@ -340,34 +258,7 @@ flowchart LR
 
 SMTP is a **push protocol**: it moves data from sender to receiver. It communicates in 7-bit ASCII text over TCP. A complete SMTP session proceeds through three sequential phases:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Client MTA (mail.example.com)"
-    participant Server as "Server MTA (mx.destination.org)"
-
-    Note over Server: Server listens on TCP Port 25
-    Client->>Server: TCP 3-Way Handshake
-    Server-->>Client: 220 mx.destination.org ESMTP Postfix Ready
-
-    Note over Client,Server: Phase 1: Session Handshake
-    Client->>Server: EHLO mail.example.com
-    Server-->>Client: 250-mx.destination.org greets mail.example.com<br/>250-SIZE 35882400<br/>250 8BITMIME
-
-    Note over Client,Server: Phase 2: Mail Transfer Dialogue
-    Client->>Server: MAIL FROM:<alice@example.com>
-    Server-->>Client: 250 2.1.0 Sender OK
-    Client->>Server: RCPT TO:<bob@destination.org>
-    Server-->>Client: 250 2.1.5 Recipient OK
-    Client->>Server: DATA
-    Server-->>Client: 354 End data with <CR><LF>.<CR><LF>
-    Client->>Server: From: Alice <alice@example.com><br/>To: Bob <bob@destination.org><br/>Subject: Exam Notes<br/><br/>Please find attached notes.<br/>.
-    Server-->>Client: 250 2.0.0 Ok: queued as 4St89x20
-
-    Note over Client,Server: Phase 3: Session Teardown
-    Client->>Server: QUIT
-    Server-->>Client: 221 2.0.0 Bye
-```
+![Figure 5.7: SMTP Three-Phase Interactive Dialogue Lifecycle](figures/fig5_07_smtp_transaction.svg)
 
 ### Core SMTP Commands
 - **`HELO` / `EHLO`**: Handshake command. `EHLO` (Extended HELO) requests ESMTP capabilities (authentication, TLS, large file support).
@@ -450,21 +341,7 @@ $$\text{Result: } \text{"CAT"} \xrightarrow{\text{Base64}} \mathbf{"Q0FV"}$$
 
 ## 2.5 Security, Relay Abuse & Mitigations (SPF, DKIM, DMARC)
 
-```mermaid
-flowchart TD
-    SPAM["Spam / Email Spoofing Vectors"]
-    SPAM --> R1["Open Mail Relay Abuse"]
-    SPAM --> R2["Forged From: Header Addresses"]
-
-    subgraph DefenseSuite["Modern Email Authentication Framework"]
-        D1["1. SPF (Sender Policy Framework)<br/>DNS TXT record lists authorized sending MTA IPs"]
-        D2["2. DKIM (DomainKeys Identified Mail)<br/>MTA signs message headers with private RSA key;<br/>receiver validates using public key published in DNS"]
-        D3["3. DMARC (Domain-based Message Authentication)<br/>Enforces policy (reject/quarantine) if SPF/DKIM fail;<br/>sends aggregate abuse reports"]
-        D4["4. STARTTLS (RFC 3207)<br/>Upgrades plaintext SMTP session to encrypted TLS"]
-    end
-
-    SPAM ==> DefenseSuite
-```
+![Figure 5.8: Modern Email Security Framework (SPF, DKIM, DMARC)](figures/fig5_08_email_security.svg)
 
 ---
 
@@ -488,31 +365,7 @@ flowchart TD
 
 Standardized by Jon Postel and Joyce Reynolds in **RFC 959 (1985)**, the **File Transfer Protocol (FTP)** is one of the earliest application protocols designed for reliable bulk file exchange across heterogeneous operating systems (Unix, VMS, MS-DOS).
 
-```mermaid
-flowchart LR
-    subgraph ClientHost["FTP Client Host"]
-        UI["User Interface"]
-        PI_C["Client Protocol Interpreter (User-PI)"]
-        DTP_C["Client Data Transfer Process (User-DTP)"]
-        FS_C[("Client Local Filesystem")]
-
-        UI --> PI_C
-        PI_C <--> DTP_C
-        DTP_C <--> FS_C
-    end
-
-    subgraph ServerHost["FTP Server Host"]
-        PI_S["Server Protocol Interpreter (Server-PI)"]
-        DTP_S["Server Data Transfer Process (Server-DTP)"]
-        FS_S[("Server Remote Filesystem")]
-
-        PI_S <--> DTP_S
-        DTP_S <--> FS_S
-    end
-
-    PI_C <===>|"Control Connection (Port 21)<br/>Commands & Replies (Telnet NVT)"| PI_S
-    DTP_C <===>|"Data Connection (Port 20 or Ephemeral)<br/>Raw File Stream"| DTP_S
-```
+![Figure 5.9: FTP Out-of-Band Dual-Connection Architecture](figures/fig5_09_ftp_architecture.svg)
 
 ### The Architectural Breakthrough: Out-of-Band Control
 Unlike protocols like HTTP or SMTP that interleave control signaling and data payloads within the same transmission stream (**In-Band Signaling**), FTP separates control and data into two distinct concurrent transport connections (**Out-of-Band Signaling**):
@@ -543,21 +396,7 @@ The defining complexity in FTP operations is negotiating who initiates the data 
 3. Client sends the command: `PORT h1,h2,h3,h4,p1,p2` over the control connection, where the target port is $P = (p1 \times 256) + p2$.
 4. When a file transfer begins (`RETR`), the **server initiates an outbound TCP connection from its Port 20 to the client's Port $P$**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "FTP Client (192.168.1.50)"
-    participant FW as "Client Firewall / NAT"
-    participant Server as "FTP Server (203.0.113.10)"
-
-    Client->>Server: 1. TCP Handshake to Port 21 (Control)
-    Client->>Server: 2. PORT 192,168,1,50,195,80 (Port 50000)
-    Server-->>Client: 200 Command OK
-    Client->>Server: RETR document.pdf
-    Note over Server: Server attempts to initiate Data Connection!
-    Server-xFW: 3. TCP SYN from Server Port 20 to Client Port 50000
-    Note over FW: FIREWALL DROPS PACKET!<br/>Inbound unsolicited connection rejected!
-```
+![Figure 5.10: Active FTP Mode (PORT) & Firewall Traversal Failure](figures/fig5_10_ftp_active_mode.svg)
 
 - **The NAT/Firewall Failure**: Client-side firewalls and Network Address Translation (NAT) gateways routinely block unsolicited incoming connection attempts from the public Internet. Active FTP completely fails for residential and enterprise clients behind firewalls.
 
@@ -571,25 +410,7 @@ Standardized to solve the firewall dilemma:
 `227 Entering Passive Mode (203,0,113,10,192,48)` where $K = (192 \times 256) + 48 = 49200$.
 4. **Client initiates the outbound data connection** from its local ephemeral port to the server's listening port $K$.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "FTP Client (Behind NAT)"
-    participant FW as "Client Firewall / NAT"
-    participant Server as "FTP Server (203.0.113.10)"
-
-    Client->>Server: 1. TCP Handshake to Port 21 (Control)
-    Client->>Server: 2. PASV
-    Server-->>Client: 227 Entering Passive Mode (203,0,113,10,192,48) [Port 49200]
-    Note over Client: Client initiates OUTBOUND connection!
-    Client->>FW: TCP SYN to Server 203.0.113.10:49200
-    FW->>Server: Forwarded (Outbound traffic permitted!)
-    Server-->>Client: TCP SYN+ACK -> Data Connection Established
-    Client->>Server: RETR document.pdf
-    Server-->>Client: 150 Opening BINARY mode data connection
-    Server-->>Client: File Bytes Transmitted...
-    Server-->>Client: 226 Transfer complete (Data connection closed)
-```
+![Figure 5.11: Passive FTP Mode (PASV) Firewall-Friendly Data Transfer](figures/fig5_11_ftp_passive_mode.svg)
 
 ---
 
@@ -652,36 +473,7 @@ The **Domain Name System (DNS)**, standardized by Paul Mockapetris in **RFC 1034
 - Translates human-friendly hostnames (e.g., `www.google.com`) into routable 32-bit IPv4 addresses (`142.250.190.68`) or 128-bit IPv6 addresses (`2607:f8b0:4005:808::2004`).
 - **Failure of Centralized `HOSTS.TXT`**: In early ARPANET, SRI managed a single master text file (`HOSTS.TXT`) that hosts downloaded via FTP. As the network grew, this centralized architecture suffered throughput bottlenecks, single-point-of-failure vulnerabilities, and name collisions.
 
-```mermaid
-flowchart TD
-    ROOT["Root Level Domain (.)<br/>(13 Root Server Clusters: A.ROOT-SERVERS.NET ... M)"]
-    
-    TLD_COM["Generic TLD (.com)"]
-    TLD_ORG["Generic TLD (.org)"]
-    TLD_IN["Country Code TLD (.in)"]
-    TLD_ARPA["Infrastructure TLD (.arpa)"]
-
-    ROOT --> TLD_COM
-    ROOT --> TLD_ORG
-    ROOT --> TLD_IN
-    ROOT --> TLD_ARPA
-
-    SLD_EX["example.com"]
-    SLD_GOOGLE["google.com"]
-    SLD_IIT["iitm.ac.in"]
-    SLD_INADDR["in-addr.arpa (Reverse DNS)"]
-
-    TLD_COM --> SLD_EX
-    TLD_COM --> SLD_GOOGLE
-    TLD_IN --> SLD_IIT
-    TLD_ARPA --> SLD_INADDR
-
-    HOST_WWW["www.example.com"]
-    HOST_MAIL["mail.example.com"]
-
-    SLD_EX --> HOST_WWW
-    SLD_EX --> HOST_MAIL
-```
+![Figure 5.12: Hierarchical Domain Name System (DNS) Tree](figures/fig5_12_dns_hierarchy_tree.svg)
 
 ### The Hierarchical Naming Tree
 1. **Root Domain (`.`)**: Represented by a null label. Administered by 13 global root server clusters (labeled `A` through `M`) operated via Anycast routing across hundreds of locations worldwide.
@@ -698,30 +490,7 @@ flowchart TD
 
 When an application requests resolution of `www.example.com`, the lookup proceeds through recursive and iterative phases:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Client Host (Browser)"
-    participant Resolver as "Local Recursive DNS (8.8.8.8)"
-    participant Root as "Root Name Server (.)"
-    participant TLD as "TLD Server (.com)"
-    participant Auth as "Authoritative Server (example.com)"
-
-    Client->>Resolver: 1. Recursive Query: Where is www.example.com?
-    Note over Resolver: Resolver checks local cache (Cache Miss!)
-    
-    Resolver->>Root: 2. Iterative Query: Where is www.example.com?
-    Root-->>Resolver: 3. Referral: Ask .com TLD server at IP a.b.c.d
-    
-    Resolver->>TLD: 4. Iterative Query: Where is www.example.com?
-    TLD-->>Resolver: 5. Referral: Ask example.com Authoritative at IP w.x.y.z
-    
-    Resolver->>Auth: 6. Iterative Query: Where is www.example.com?
-    Auth-->>Resolver: 7. Authoritative Answer: A record = 93.184.216.34 (TTL = 3600)
-    
-    Note over Resolver: Caches record for 3600 seconds
-    Resolver-->>Client: 8. Final Resolved IP: 93.184.216.34
-```
+![Figure 5.13: Recursive vs. Iterative DNS Resolution Sequence Trace](figures/fig5_13_dns_resolution_trace.svg)
 
 ### Recursive Query (Step 1 & 8)
 The client delegates the lookup burden to the Local Recursive DNS Resolver (typically provided by the ISP or an Anycast service like Google `8.8.8.8` or Cloudflare `1.1.1.1`). The resolver must return either the resolved IP or an error; it cannot return a referral.
@@ -812,11 +581,7 @@ Because standard DNS is unauthenticated, attackers can flood resolvers with spoo
 
 Standardized in **RFC 1939 (1996)**, the **Post Office Protocol Version 3 (POP3)** is an application-layer **mail retrieval (access) protocol**.
 
-```mermaid
-flowchart LR
-    MTA["Sending / Destination MTA"] -->|"SMTP (Port 25)<br/>Push Protocol"| MBX[("Mailbox Spool Server<br/>(Always Connected)")]
-    MBX -.->|"POP3 (Port 110 / 995)<br/>Pull Protocol"| CLIENT["Client MUA (Laptop / Phone)<br/>(Intermittently Connected)"]
-```
+![Figure 5.14: Push vs. Pull Paradigm: Mail Transfer (SMTP) vs. Access (POP3/IMAP)](figures/fig5_14_mail_access_vs_transfer.svg)
 
 ### Why SMTP Cannot Deliver Directly to End-User Computers
 SMTP is a store-and-forward server-to-server daemon that requires the destination endpoint to be **permanently connected with a static IP address**. Personal client devices are frequently offline, run behind dynamic NAT configurations, or operate over cellular networks. POP3 acts as the **pull bridge**, allowing intermittently connected client MUAs to authenticate, query, and download mail spooled on a dedicated, permanently available mail server.
@@ -827,15 +592,7 @@ SMTP is a store-and-forward server-to-server daemon that requires the destinatio
 
 A POP3 session transitions strictly through three sequential states:
 
-```mermaid
-stateDiagram-v2
-    [*] --> Authorization: TCP Port 110 Connected (Greeting)
-    Authorization --> Transaction: Valid USER & PASS (or APOP)
-    Transaction --> Update: Client issues QUIT command
-    Update --> [*]: Marked messages deleted; TCP connection closed
-    
-    Authorization --> [*]: Connection failed / Timeout
-```
+![Figure 5.15: POP3 Three-State Lifecycle Finite State Machine](figures/fig5_15_pop3_fsm.svg)
 
 ### 1. Authorization State
 - The client establishes a TCP connection to **Port 110** (or Port 995 for POP3S over TLS).
@@ -880,33 +637,7 @@ POP3 server replies begin with one of two status indicators:
 - **`+OK`**: Command successfully processed, followed by optional descriptive text or data.
 - **`-ERR`**: Command failed, followed by error explanation.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Client MUA"
-    participant Server as "POP3 Server"
-
-    Server-->>Client: +OK POP3 server ready <1896.697170950@example.com>
-    Note over Client,Server: Authorization State
-    Client->>Server: USER alice
-    Server-->>Client: +OK User accepted
-    Client->>Server: PASS secretpassword
-    Server-->>Client: +OK Mailbox open, 2 messages (3200 octets)
-
-    Note over Client,Server: Transaction State
-    Client->>Server: STAT
-    Server-->>Client: +OK 2 3200
-    Client->>Server: LIST
-    Server-->>Client: +OK 2 messages (3200 octets)<br/>1 1200<br/>2 2000<br/>.
-    Client->>Server: RETR 1
-    Server-->>Client: +OK 1200 octets<br/>From: bob@destination.org...<br/>.
-    Client->>Server: DELE 1
-    Server-->>Client: +OK message 1 marked for deletion
-
-    Note over Client,Server: Update State
-    Client->>Server: QUIT
-    Server-->>Client: +OK POP3 server signing off (1 message unlinked)
-```
+![Figure 5.16: Annotated POP3 Client-Server Dialogue Session Trace](figures/fig5_16_pop3_session.svg)
 
 ---
 
@@ -938,14 +669,7 @@ sequenceDiagram
 
 Standardized in **RFC 854 (1983)**, **TELNET** is one of the earliest interactive remote-login protocols developed for the ARPANET. It permits a user seated at a terminal to log into a remote host across a network and execute command-line shells as if their terminal were wired directly to the remote computer.
 
-```mermaid
-flowchart LR
-    LocalTerm["Local Client Terminal<br/>(Custom Keyboard / Display)"] <--> LocalOS["Local Client OS"]
-    LocalOS <--> ClientTEL["TELNET Client Process"]
-    ClientTEL <===>|"TCP Port 23 (Plaintext NVT Stream)"| ServerTEL["TELNET Server Daemon (telnetd)"]
-    ServerTEL <--> PseudoTerm["Pseudo-Terminal Driver (pty)"]
-    PseudoTerm <--> RemoteShell["Remote Login Shell (/bin/bash)"]
-```
+![Figure 5.17: TELNET Client-Server Architecture & NVT Abstraction](figures/fig5_17_telnet_nvt.svg)
 
 ---
 
@@ -985,16 +709,7 @@ TELNET uses a single TCP connection for both user data and control commands (**I
 
 TELNET features a dynamic, four-verb symmetric negotiation mechanism:
 
-```mermaid
-flowchart TD
-    subgraph OptionNegotiationRules["Symmetric Option Negotiation Pairs"]
-        direction TB
-        P1["Sender offers to enable option: SENDS WILL<br/>Receiver agrees: RESPONDS DO<br/>Receiver refuses: RESPONDS DONT"]
-        P2["Sender requests receiver to enable option: SENDS DO<br/>Receiver agrees: RESPONDS WILL<br/>Receiver refuses: RESPONDS WONT"]
-        P3["Sender disables option: SENDS WONT<br/>Receiver must acknowledge: RESPONDS DONT"]
-        P4["Sender demands receiver disable: SENDS DONT<br/>Receiver must acknowledge: RESPONDS WONT"]
-    end
-```
+![Figure 5.18: Symmetric 4-Verb Option Negotiation State Logic](figures/fig5_18_telnet_negotiation.svg)
 
 ### Common Negotiated Options
 1. **Echo (Option 1)**: By default, local terminals echo keystrokes locally. When connecting to Unix hosts, the server negotiates `WILL ECHO`, directing the server to echo characters back to the terminal (enabling password masking).
@@ -1005,12 +720,7 @@ flowchart TD
 
 ## 6.5 Severe Security Vulnerabilities & Deprecation Rationale
 
-```mermaid
-flowchart LR
-    ATTACKER["Attacker on Shared Wi-Fi / LAN<br/>(Running Wireshark / tcpdump)"]
-    VICTIM["Telnet Client"] ==>|"Port 23: PLAINTEXT TRANSMISSION<br/>USER: root<br/>PASS: secret123"| SERVER["Telnet Server"]
-    VICTIM -.->|"Cleartext Eavesdropping"| ATTACKER
-```
+![Figure 5.19: Cleartext Packet Sniffing Vulnerability in TELNET](figures/fig5_19_telnet_vulnerabilities.svg)
 
 1. **Cleartext Transmission**: TELNET transmits every byte—including usernames and passwords—unencrypted across the network. Anyone with a packet capture tool on the path can read credentials directly off the wire.
 2. **No Data Integrity**: Packets can be modified in transit without detection.
@@ -1036,17 +746,7 @@ flowchart LR
 
 Designed by Tatu Ylönen in 1995 following a campus password-sniffing incident and standardized across **RFC 4251 through RFC 4254**, **Secure Shell (SSH-2)** provides secure, encrypted, and authenticated remote access over insecure networks on **TCP Port 22**.
 
-```mermaid
-flowchart TD
-    subgraph SSHStack["SSH-2 Layered Architecture (RFC 4251)"]
-        L3["SSH Connection Layer (RFC 4254)<br/>Multiplexes Interactive Shells, SFTP, Remote Exec, and Port Forwarding"]
-        L2["SSH User Authentication Layer (RFC 4252)<br/>Authenticates User: Public Key, Password, Host-Based"]
-        L1["SSH Transport Layer (RFC 4253)<br/>Confidentiality (AES), Integrity (HMAC), Forward Secrecy (ECDH), Server Host Auth"]
-        TCP["Underlying Reliable Transport (TCP Port 22)"]
-
-        TCP ===> L1 ===> L2 ===> L3
-    end
-```
+![Figure 5.20: SSH-2 Protocol Architecture and Sublayers](figures/fig5_20_ssh_architecture.svg)
 
 ### The Three Architectural Sublayers:
 1. **SSH Transport Layer**: Establishes a secure, encrypted channel over TCP. Negotiates cryptographic algorithms, performs Diffie-Hellman key exchange, authenticates the server host key, and encrypts all further traffic.
@@ -1057,31 +757,7 @@ flowchart TD
 
 ## 7.2 Cryptographic Handshake & Ephemeral Diffie-Hellman Key Exchange
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "SSH Client"
-    participant Server as "SSH Server (:22)"
-
-    Note over Client,Server: Phase 1: TCP Handshake & Version Exchange
-    Client->>Server: SSH-2.0-OpenSSH_9.0
-    Server-->>Client: SSH-2.0-OpenSSH_8.9p1
-
-    Note over Client,Server: Phase 2: Algorithm Negotiation (KEXINIT)
-    Client->>Server: SSH_MSG_KEXINIT (Supported Ciphers, KEX, MAC algorithms)
-    Server-->>Client: SSH_MSG_KEXINIT (Supported Ciphers, KEX, MAC algorithms)
-
-    Note over Client,Server: Phase 3: Diffie-Hellman Key Exchange & Host Verification
-    Client->>Server: SSH_MSG_KEXDH_INIT (Client Ephemeral Public Value e)
-    Server-->>Client: SSH_MSG_KEXDH_REPLY (Server Host Key K_S, Public Value f, Signature s)
-    Note over Client: Client verifies Server Host Key against ~/.ssh/known_hosts!<br/>Verifies Signature s using K_S.<br/>Computes Shared Secret K = f^x mod p
-    Note over Server: Computes Shared Secret K = e^y mod p
-
-    Note over Client,Server: Phase 4: Encryption Activation
-    Client->>Server: SSH_MSG_NEWKEYS
-    Server-->>Client: SSH_MSG_NEWKEYS
-    Note over Client,Server: ALL SUBSEQUENT COMMUNICATIONS ENCRYPTED & HMAC PROTECTED!
-```
+![Figure 5.21: Ephemeral Diffie-Hellman Key Exchange Handshake](figures/fig5_21_ssh_handshake.svg)
 
 ---
 
@@ -1121,23 +797,7 @@ Once the transport encryption is active, the User Authentication layer authentic
 
 SSH can encapsulate and tunnel arbitrary TCP traffic through its encrypted connection:
 
-```mermaid
-flowchart TD
-    subgraph LocalFW["1. Local Port Forwarding: ssh -L 8080:db.internal:3306 user@gateway"]
-        direction LR
-        AppLoc["Local App (:8080)"] --> SSHTun1["Local SSH Client"] ===>|"Encrypted SSH Tunnel"| Gate1["SSH Gateway"] --> DB1["Target Intranet DB (:3306)"]
-    end
-
-    subgraph RemoteFW["2. Remote Port Forwarding: ssh -R 9000:localhost:80 user@cloud"]
-        direction LR
-        ExtUser["External Internet User"] --> Cloud2["Public Cloud Host (:9000)"] ===>|"Encrypted Tunnel"| SSHTun2["Local SSH Client"] --> WebLoc["Local Web Service (:80)"]
-    end
-
-    subgraph DynamicFW["3. Dynamic Port Forwarding: ssh -D 1080 user@proxy"]
-        direction LR
-        Browser["Local Browser (SOCKS5 :1080)"] --> SSHClient3["Local SSH Client"] ===>|"Encrypted Tunnel"| Proxy3["SSH Remote Host"] --> TargetWeb["Target Web Destination"]
-    end
-```
+![Figure 5.22: SSH Port Forwarding Mechanics (Local, Remote, Dynamic)](figures/fig5_22_ssh_port_forwarding.svg)
 
 1. **Local Forwarding (`-L`)**: Opens a local listening port; traffic sent to it is tunneled to a remote destination through the SSH server.
 2. **Remote Forwarding (`-R`)**: Opens a listening port on the remote server; incoming connections there are forwarded back through the tunnel to a local resource.
@@ -1168,23 +828,7 @@ flowchart TD
 
 **HTTP (HyperText Transfer Protocol)** and **HTTPS (HTTP Secure - RFC 2818)** represent the plain and encrypted implementations of web transport:
 
-```mermaid
-flowchart TD
-    subgraph HTTP_Stack["Plaintext HTTP Protocol Stack"]
-        A1["Application Layer: HTTP"]
-        A2["Transport Layer: TCP (Port 80)"]
-        A3["Network Layer: IP"]
-        A1 ===> A2 ===> A3
-    end
-
-    subgraph HTTPS_Stack["Encrypted HTTPS Protocol Stack"]
-        B1["Application Layer: HTTP"]
-        B_TLS["Cryptographic Sublayer: TLS 1.2 / TLS 1.3"]
-        B2["Transport Layer: TCP (Port 443)"]
-        B3["Network Layer: IP"]
-        B1 ===> B_TLS ===> B2 ===> B3
-    end
-```
+![Figure 5.23: Protocol Stack Comparison: Plaintext HTTP vs. Encrypted HTTPS](figures/fig5_23_http_vs_https_stack.svg)
 
 - **HTTP**: Transmits all data (URLs, headers, form posts, cookies, session credentials) in unencrypted plain text over **TCP Port 80**. Any entity on the transmission path (Wi-Fi sniffers, rogue routers, ISPs, state actors) can eavesdrop on, alter, or inject malicious payloads into the traffic.
 - **HTTPS**: Encapsulates standard HTTP traffic inside an encrypted **Transport Layer Security (TLS)** tunnel over **TCP Port 443**. The application layer continues to generate standard HTTP requests and responses, but the TLS engine transparently encrypts everything before it hits the network interface.
@@ -1195,24 +839,7 @@ flowchart TD
 
 Before a single HTTP byte can be sent over HTTPS, client and server negotiate security parameters via the **TLS Handshake**:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Client Browser"
-    participant Server as "Web Server (:443)"
-
-    Note over Client,Server: 1. TCP 3-Way Handshake Complete
-    Client->>Server: ClientHello (Supported TLS Versions, Cipher Suites, Client Nonce)
-    Server-->>Client: ServerHello (Selected Cipher Suite, Server Nonce)<br/>Certificate (X.509 Public Key Certificate signed by CA)<br/>ServerKeyExchange (ECDHE Public Parameter)<br/>ServerHelloDone
-    
-    Note over Client: Client validates Certificate against trusted Root CAs.<br/>Computes Pre-Master Secret via ECDHE.<br/>Derives Symmetric Session Keys!
-    Client->>Server: ClientKeyExchange (ECDHE Public Parameter)<br/>ChangeCipherSpec<br/>Finished (Encrypted Verification Hash)
-    Server-->>Client: ChangeCipherSpec<br/>Finished (Encrypted Verification Hash)
-
-    Note over Client,Server: TLS Tunnel Active: Encrypted HTTP Data Transfer Begins!
-    Client->>Server: Encrypted HTTP Request (GET /account)
-    Server-->>Client: Encrypted HTTP Response (200 OK)
-```
+![Figure 5.24: TLS 1.3 Cryptographic Handshake Lifecycle](figures/fig5_24_tls_handshake.svg)
 
 ### The Three Pillars of HTTPS Security:
 1. **Confidentiality**: Protected using high-speed symmetric ciphers (e.g., AES-GCM, ChaCha20-Poly1305). Intermediate eavesdroppers see only pseudorandom bytes.

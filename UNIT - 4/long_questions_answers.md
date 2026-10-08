@@ -60,27 +60,7 @@
 
 The **Transport Layer** resides at Layer 4 of the ISO-OSI 7-Layer Reference Model and corresponds directly to the Transport (Host-to-Host) Layer of the TCP/IP protocol suite. It occupies a pivotal architectural position: it acts as the **liaison and boundary** between the upper application-oriented software layers (Application, Presentation, Session) and the lower hardware/network communication sub-layers (Network, Data Link, Physical).
 
-```mermaid
-flowchart TD
-    subgraph AppLayers["User / Application Domain (Software Processes)"]
-        L7["Application Layer (HTTP, SMTP, DNS, FTP)"]
-    end
-
-    subgraph TransportBoundary["The Core Boundary & Liaison"]
-        L4["Transport Layer (Layer 4)<br/>Process-to-Process Delivery (Sockets, Ports, Streams/Datagrams)"]
-    end
-
-    subgraph NetworkSubnet["Network Subnet Domain (Host Infrastructure & Links)"]
-        L3["Network Layer (Layer 3) — Host-to-Host Delivery (IP Packets)"]
-        L2["Data Link Layer (Layer 2) — Hop-to-Hop Delivery (Frames)"]
-        L1["Physical Layer (Layer 1) — Bit Transmission (Signals)"]
-    end
-
-    L7 ===> L4
-    L4 ===> L3
-    L3 ===> L2
-    L2 ===> L1
-```
+![Figure 4.1: Transport Layer Delivery Hierarchy](figures/fig4_01_delivery_hierarchy.svg)
 
 ### The Delivery Hierarchy: Process-to-Process vs. Host-to-Host vs. Hop-to-Hop
 To appreciate the transport layer's duty, one must contrast its delivery scope against the lower layers:
@@ -88,39 +68,7 @@ To appreciate the transport layer's duty, one must contrast its delivery scope a
 2. **Host-to-Host (Network Layer - Layer 3)**: Delivers packets from a source device (identified by a 32-bit IPv4 or 128-bit IPv6 address) to a destination device across dozens of intermediate routers. However, once the packet reaches the destination computer, the Network Layer's job is complete. It cannot deliver the data to a specific software program.
 3. **Process-to-Process (Transport Layer - Layer 4)**: A modern computer runs hundreds of concurrent processes (web browsers, email clients, SSH sessions, streaming apps). The Transport Layer is responsible for delivering the data payload specifically to the **exact executing process** that requested it, and managing end-to-end reliability, flow rate, and congestion.
 
-```mermaid
-flowchart LR
-    subgraph HostA["Source Host A (192.168.1.10)"]
-        P1["Browser Process (Port 52140)"]
-        P2["Email Process (Port 52142)"]
-        TL_A["Transport Layer A"]
-        NL_A["Network Layer A"]
-        P1 --> TL_A
-        P2 --> TL_A
-        TL_A --> NL_A
-    end
-
-    subgraph Core["Internet Core (Routers)"]
-        R1["Router R1"]
-        R2["Router R2"]
-    end
-
-    subgraph HostB["Destination Host B (203.0.113.50)"]
-        NL_B["Network Layer B"]
-        TL_B["Transport Layer B"]
-        WebSrv["Apache Web Server (Port 80)"]
-        MailSrv["Postfix Mail Server (Port 25)"]
-        NL_B --> TL_B
-        TL_B --> WebSrv
-        TL_B --> MailSrv
-    end
-
-    NL_A -->|"Hop-by-Hop"| R1
-    R1 -->|"Hop-by-Hop"| R2
-    R2 -->|"Hop-by-Hop"| NL_B
-    NL_A -.->|"Host-to-Host Logical Link (IP)"| NL_B
-    TL_A ==>|"Process-to-Process Logical Channel (TCP/UDP)"| TL_B
-```
+![Figure 4.2: End-to-End Sockets and 5-Tuple Addressing](figures/fig4_02_sockets_addressing.svg)
 
 ---
 
@@ -129,12 +77,7 @@ flowchart LR
 ### The Port Number Mechanism
 To deliver data to the correct process, the Transport Layer employs a 16-bit integer identifier known as a **Port Number**, providing $2^{16} = 65,536$ unique port addresses (0 to 65535) per IP address. The Internet Assigned Numbers Authority (IANA) divides this address space into three standardized operational tiers:
 
-```mermaid
-flowchart LR
-    P0["0"] ---|"Well-Known Ports (System / Root Required)"| P1023["1023"]
-    P1024["1024"] ---|"Registered Ports (Vendor / User Services)"| P49151["49151"]
-    P49152["49152"] ---|"Dynamic / Ephemeral Ports (Client Allocation)"| P65535["65535"]
-```
+![Figure 4.3: IANA Port Number Architecture](figures/fig4_03_port_ranges.svg)
 
 1. **Well-Known Ports (0 to 1023)**:
    - Reserved strictly for universal, standardized system-level server daemon processes.
@@ -163,24 +106,7 @@ This 5-tuple design permits a single web server running on `203.0.113.50:80` to 
 
 Because host operating systems run many simultaneous applications over a single physical network interface card (NIC), the Transport Layer must perform bidirectional signal arbitration:
 
-```mermaid
-flowchart TD
-    subgraph SenderSide["Sender: Multiplexing"]
-        A1["Process 1 (HTTP :80)"] -->|"Payload + Header"| MUX["Transport Multiplexer"]
-        A2["Process 2 (DNS :53)"] -->|"Payload + Header"| MUX
-        A3["Process 3 (SSH :22)"] -->|"Payload + Header"| MUX
-        MUX -->|"Single IP Packet Stream"| NET_TX["Network Layer (IP)"]
-    end
-
-    subgraph ReceiverSide["Receiver: Demultiplexing"]
-        NET_RX["Network Layer (IP)"] -->|"IP Datagrams"| DEMUX["Transport Demultiplexer"]
-        DEMUX -->|"Inspect Port :80"| B1["Process 1 (Web Server)"]
-        DEMUX -->|"Inspect Port :53"| B2["Process 2 (DNS Daemon)"]
-        DEMUX -->|"Inspect Port :22"| B3["Process 3 (SSH Daemon)"]
-    end
-
-    NET_TX ==>|"Physical Link Transit"| NET_RX
-```
+![Figure 4.4: Multiplexing and Demultiplexing Mechanics](figures/fig4_04_multiplexing_demux.svg)
 
 ### Multiplexing (At Sender Host)
 The Transport Layer gathers discrete chunks of data from multiple active application sockets, encapsulates each chunk into a transport protocol data unit (segment for TCP, datagram for UDP) by prefixing a header containing the source and destination port numbers, and passes these units down to the Network Layer for transmission.
@@ -196,14 +122,7 @@ When the Transport Layer receives datagrams delivered up from the Network Layer:
 
 The Transport Layer offers two fundamentally different paradigms of service to upper-layer applications:
 
-```mermaid
-flowchart TD
-    subgraph ParadigmComp["Transport Service Paradigms"]
-        direction LR
-        CO["Connection-Oriented Service (TCP)<br/>1. State Setup Handshake<br/>2. Ordered Data Transfer with ACKs<br/>3. Graceful State Teardown"]
-        CL["Connectionless Service (UDP)<br/>1. Independent Datagrams<br/>2. Zero Session Setup / No State<br/>3. Best-Effort Delivery"]
-    end
-```
+![Figure 4.5: Connection-Oriented vs. Connectionless Service Paradigms](figures/fig4_05_connection_paradigms.svg)
 
 ### Connection-Oriented Service
 - Modeled like a telephone call.
@@ -229,26 +148,7 @@ If a high-performance server transmits data at $10\text{ Gbps}$ over high-speed 
 - **Data Link Flow Control**: Operates hop-by-hop across an immediate physical wire between two switches or routers.
 - **Transport Flow Control**: Operates **strictly end-to-end** between the ultimate source process and the destination process, completely transparent to intermediate routers.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Sender as "Sender Transport Stack"
-    participant Receiver as "Receiver Transport Stack"
-    participant App as "Receiving Application Process"
-
-    Note over Receiver: Receiver Buffer = 64 KB<br/>Application is slow to read
-    Sender->>Receiver: TCP Segments (32 KB Data)
-    Note over Receiver: Buffer Occupied = 32 KB<br/>Free Buffer (rwnd) = 32 KB
-    Receiver-->>Sender: ACK (rwnd = 32 KB)
-    Sender->>Receiver: TCP Segments (32 KB Data)
-    Note over Receiver: Buffer Occupied = 64 KB (Full!)<br/>Free Buffer (rwnd) = 0 KB
-    Receiver-->>Sender: ACK (rwnd = 0) [Zero Window Advertisement!]
-    Note over Sender: Sender FREEZES Transmission!<br/>Starts Persistence Timer Probing
-    App->>Receiver: Application Reads 48 KB from Buffer
-    Note over Receiver: Free Buffer (rwnd) = 48 KB
-    Receiver-->>Sender: Window Update ACK (rwnd = 48 KB)
-    Sender->>Receiver: Resumes Data Transmission
-```
+![Figure 4.6: End-to-End Flow Control vs. Hop-by-Hop Link Flow Control](figures/fig4_06_flow_control_types.svg)
 
 The receiver continuously informs the sender of its available buffer capacity using an **Advertised Window ($rwnd$)** field carried in transport header acknowledgments. The sender dynamically restricts its unacknowledged in-flight bytes:
 $$\text{In-Flight Bytes} \le rwnd$$
@@ -259,23 +159,7 @@ $$\text{In-Flight Bytes} \le rwnd$$
 
 Because the underlying Network Layer (IP) is inherently **unreliable and best-effort** (it may silently corrupt bits, drop packets due to router queue exhaustion, or deliver packets out of order due to dynamic multipath routing), the Transport Layer provides **end-to-end reliability** to applications that require it.
 
-```mermaid
-flowchart TD
-    ERR["Pillars of Transport Error Control"]
-    E1["1. Error Detection (16-bit 1's Complement Checksum)"]
-    E2["2. Sequence Numbering (Byte-Level / Packet-Level Tracking)"]
-    E3["3. Acknowledgment Schemes (Cumulative ACK & Selective ACK)"]
-    E4["4. Retransmission Timers (ARQ: Automatic Repeat reQuest)"]
-    E5["5. Duplicate Detection & Discarding"]
-    E6["6. Out-of-Order Reassembly Buffering"]
-
-    ERR --> E1
-    ERR --> E2
-    ERR --> E3
-    ERR --> E4
-    ERR --> E5
-    ERR --> E6
-```
+![Figure 4.7: Four Pillars of Transport Layer Error Control](figures/fig4_07_error_control_pillars.svg)
 
 1. **Error Detection**: Employs mathematical checksum algorithms (such as the Internet Checksum or CRC-32c) covering the transport header, transport payload, and a pseudo-header from the network layer. Corrupted packets are silently discarded.
 2. **Sequence Numbering**: Assigns unique sequence numbers to every byte or packet. Allows the destination stack to reconstruct the original linear byte stream regardless of path variations.
@@ -289,29 +173,7 @@ flowchart TD
 
 While Flow Control prevents the sender from overwhelming the **receiver**, **Congestion Control** prevents all competing senders collectively from overwhelming the **intermediate network infrastructure (routers, switches, and transmission links)**.
 
-```mermaid
-flowchart LR
-    subgraph Senders["Multiple Fast Senders"]
-        H1["Host 1 (1 Gbps)"]
-        H2["Host 2 (1 Gbps)"]
-        H3["Host 3 (1 Gbps)"]
-    end
-
-    subgraph Bottleneck["Intermediate Router Core"]
-        R["Router Buffer<br/>Queue Overflow!"]
-        BL["Bottleneck Link<br/>Capacity: 1 Gbps"]
-    end
-
-    subgraph Dest["Receiver"]
-        D["Host B"]
-    end
-
-    H1 --> R
-    H2 --> R
-    H3 --> R
-    R -->|"Packet Drops & Delays"| BL
-    BL --> D
-```
+![Figure 4.8: Congestion and Buffer Flooding at Bottleneck Core Routers](figures/fig4_08_congestion_dynamics.svg)
 
 When aggregate traffic exceeds link capacities, router buffers fill up, queuing delay escalates toward infinity, and routers drop packets. If senders blindly retransmit dropped packets, the network enters **Congestion Collapse**.
 
@@ -356,17 +218,7 @@ The Transport Layer tailors its operational characteristics to meet the divergen
 
 The **User Datagram Protocol (UDP)**, formally specified by David P. Reed in **IETF RFC 768 (1980)**, is the simplest, most minimalist transport layer protocol defined for the Internet Protocol suite. UDP was intentionally engineered as an ultra-thin architectural abstraction layer placed directly atop the Network Layer (IP).
 
-```mermaid
-flowchart TD
-    subgraph DesignPhil["RFC 768 UDP Design Philosophy"]
-        direction TB
-        P1["Minimalist Overhead: Only 8 Bytes of Header"]
-        P2["No Handshake Latency: Instant First-Packet Data Dispatch"]
-        P3["Stateless Operation: Zero Connection State in Server OS Kernel"]
-        P4["No Rate Throttling: Application Dictates Transmission Pace"]
-        P5["Message-Oriented: Preserves Discrete Application Record Boundaries"]
-    end
-```
+![Figure 4.9: RFC 768 UDP Design Philosophy](figures/fig4_09_udp_philosophy.svg)
 
 ### The Rationale for an Unreliable Transport Protocol
 At first glance, providing an "unreliable" transport service seems counter-intuitive. However, UDP exists because many modern distributed applications prioritize **minimal transmission latency, predictable packet dispatch timing, and simplicity** over guaranteed delivery:
@@ -377,14 +229,7 @@ At first glance, providing an "unreliable" transport service seems counter-intui
 
 ## 2.2 Architectural Characteristics & Operating Principles
 
-```mermaid
-flowchart LR
-    AppMsg["Application Message<br/>(e.g., 512-byte DNS Query)"] -->|"Preserves Exact Boundary"| UDP_TX["UDP Layer: Adds 8-byte Header"]
-    UDP_TX -->|"520-byte Datagram"| IP_TX["IP Layer: Encapsulates"]
-    IP_TX -->|"Transit"| IP_RX["IP Layer: Decapsulates"]
-    IP_RX --> UDP_RX["UDP Layer: Verifies Checksum"]
-    UDP_RX -->|"Delivers Exact 512-byte Message"| AppRx["Application Process"]
-```
+![Figure 4.10: UDP Message-Oriented Framing and Record Preservation](figures/fig4_10_udp_framing.svg)
 
 1. **Connectionless Paradigm**: UDP does not establish a connection before transmitting, nor does it tear one down when done. A UDP sender simply attaches the destination address and port, and dispatches the datagram into the network immediately.
 2. **Stateless Communication**: A server running UDP maintains no connection state parameters: no sequence numbers, no acknowledgment numbers, no receive window sizes, and no retransmission timers. Consequently, a single UDP server can effortlessly serve orders of magnitude more concurrent clients than a TCP server with equivalent RAM.
@@ -440,6 +285,8 @@ $$\text{Max Payload}_{\text{IPv4}} = 65535 - 20 - 8 = 65,507\text{ bytes}$$
 ---
 
 ## 2.4 UDP Pseudo-Header & Internet Checksum Computation
+
+![Figure 4.H2: IPv4 / UDP Pseudo-Header Layout](figures/fig4_hdr_pseudo_udp.svg)
 
 ### Rationale for the Pseudo-Header
 A common question in network engineering is: *Why does a Layer 4 protocol inspect Layer 3 IP addresses during its checksum calculation?*
@@ -529,25 +376,7 @@ Because the sum yields all 1-bits (`0xFFFF`), the receiver confirms zero bit tra
 Unlike TCP, which uses a 4-tuple to map incoming segments to specific connection sockets, UDP performs demultiplexing using a **2-tuple**:
 $$\text{UDP Demux Key} = (\text{Destination IP Address}, \text{Destination Port Number})$$
 
-```mermaid
-flowchart TD
-    subgraph HostA["Client Host A (10.0.0.1)"]
-        CA["DNS Client Process<br/>Ephemeral Port: 53120"]
-    end
-
-    subgraph HostB["Client Host B (10.0.0.2)"]
-        CB["DNS Client Process<br/>Ephemeral Port: 54988"]
-    end
-
-    subgraph Server["DNS Server (198.51.100.1)"]
-        SOCK["Single UDP Socket bound to Port 53<br/>Incoming Queue Buffer"]
-        DNS_PROC["Named / BIND Server Process"]
-        SOCK --> DNS_PROC
-    end
-
-    CA -->|"UDP Datagram to 198.51.100.1:53"| SOCK
-    CB -->|"UDP Datagram to 198.51.100.1:53"| SOCK
-```
+![Figure 4.11: 2-Tuple Connectionless Demultiplexing in UDP](figures/fig4_11_udp_demux.svg)
 
 - When Host A and Host B transmit DNS queries to the server at port 53, both incoming datagrams land in the **same receiving socket queue**.
 - To reply, the DNS application process inspects the `Source IP` and `Source Port` embedded inside each received datagram and directs its response to that specific client endpoint.
@@ -571,11 +400,7 @@ flowchart TD
 
 ## 2.7 UDP Vulnerabilities, Failure Modes & Mitigations
 
-```mermaid
-flowchart LR
-    ATK["Attacker<br/>(Botnet)"] -->|"Forged DNS Queries<br/>Spoofed Source IP: Victim"| AMP["Reflector / Open DNS Resolver"]
-    AMP -->|"Massive Amplified Responses<br/>(50x - 100x Payload)"| VIC["Victim Host<br/>(Pipe Saturated / Crashed)"]
-```
+![Figure 4.12: UDP DNS Amplification Reflection Attack](figures/fig4_12_udp_amplification.svg)
 
 1. **UDP Spoofing & Reflection / Amplification Attacks**:
    - Because UDP is connectionless and performs no handshake verification, an attacker can trivially forge (spoof) the Source IP address in a UDP header.
@@ -614,12 +439,7 @@ flowchart LR
 
 The **Transmission Control Protocol (TCP)**, originally defined by Vinton Cerf and Robert Kahn in **RFC 793 (1981)** and modernly codified in **RFC 9293 (2022)**, is the foundational workhorse protocol powering the World Wide Web, secure shell access, electronic mail, database clustering, and cloud systems.
 
-```mermaid
-flowchart LR
-    subgraph StreamView["Application's View of TCP: An Unbroken Pipe"]
-        AppA["Writing App Process"] ==>|"Unbroken In-Order Byte Stream: 1, 2, 3, 4, 5... n"| AppB["Reading App Process"]
-    end
-```
+![Figure 4.13: TCP Full-Duplex Byte-Stream Virtual Circuit Model](figures/fig4_13_tcp_virtual_circuit.svg)
 
 ### The Virtual Circuit Abstraction
 Underneath TCP lies an unreliable, packet-switched Internet core that drops, duplicates, delays, and misroutes packets across changing paths. TCP shields applications from this reality by presenting the abstraction of a **reliable, full-duplex, point-to-point virtual circuit**. An application can write a multi-gigabyte file into a TCP socket as a continuous stream of unstructured bytes, confident that TCP will reconstruct that exact byte sequence at the destination without loss, duplication, or corruption.
@@ -710,26 +530,7 @@ Crucial modern performance options:
 
 ### 1. Connection Establishment: The 3-Way Handshake
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "TCP Client"
-    participant Server as "TCP Server"
-
-    Note over Server: State: LISTEN (Bound to Port 80)
-    Note over Client: State: CLOSED
-
-    Client->>Server: 1. SYN (Seq = ISN_C, Control = SYN, MSS = 1460)
-    Note over Client: State: SYN_SENT
-    Note over Server: State: SYN_RCVD (Allocates TCB Buffer)
-
-    Server->>Client: 2. SYN + ACK (Seq = ISN_S, Ack = ISN_C + 1, Control = SYN|ACK)
-    Note over Client: State: ESTABLISHED
-
-    Client->>Server: 3. ACK (Seq = ISN_C + 1, Ack = ISN_S + 1, Control = ACK)
-    Note over Server: State: ESTABLISHED
-    Note over Client,Server: Connection Open: Bidirectional Data Transfer Begins
-```
+![Figure 4.14: TCP 3-Way Handshake Connection Establishment](figures/fig4_14_tcp_3way_handshake.svg)
 
 - **Step 1 (SYN)**: Client chooses a random initial sequence number $ISN_C$ and dispatches a control segment with `SYN=1`. It carries options such as MSS and Window Scale.
 - **Step 2 (SYN-ACK)**: Server receives the SYN, allocates a Transmission Control Block (TCB) buffer, chooses its own random $ISN_S$, and sends `SYN=1, ACK=1` with acknowledgment number $ISN_C + 1$.
@@ -747,30 +548,7 @@ When the legitimate client returns the ACK with $Ack = ISN_S + 1$, the server de
 
 Because TCP is **full-duplex**, each transmission direction must be shut down independently:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Client (Closes Active)"
-    participant Server as "Server (Closes Passive)"
-
-    Note over Client,Server: State: ESTABLISHED
-
-    Client->>Server: 1. FIN (Seq = u, Ack = v, Control = FIN|ACK)
-    Note over Client: State: FIN_WAIT_1
-    Note over Server: State: CLOSE_WAIT (Informs Application)
-
-    Server->>Client: 2. ACK (Seq = v, Ack = u + 1, Control = ACK)
-    Note over Client: State: FIN_WAIT_2
-    Note over Server: Server may still send remaining pending data!
-
-    Server->>Client: 3. FIN (Seq = w, Ack = u + 1, Control = FIN|ACK)
-    Note over Server: State: LAST_ACK
-    Note over Client: State: TIME_WAIT (Starts 2*MSL Timer)
-
-    Client->>Server: 4. ACK (Seq = u + 1, Ack = w + 1, Control = ACK)
-    Note over Server: State: CLOSED (Releases TCB Memory)
-    Note over Client: Waits 2*MSL (e.g., 60-120s) -> Transitions to CLOSED
-```
+![Figure 4.15: TCP 4-Way Handshake Connection Teardown & TIME_WAIT](figures/fig4_15_tcp_4way_teardown.svg)
 
 #### The TIME_WAIT State and $2 \times \text{MSL}$ Rationale
 Why does the active closer wait in `TIME_WAIT` for two times the Maximum Segment Lifetime ($2 \times \text{MSL}$, typically 1 to 2 minutes) before closing?
@@ -781,28 +559,7 @@ Why does the active closer wait in `TIME_WAIT` for two times the Maximum Segment
 
 ### 3. Complete TCP Finite State Machine (FSM)
 
-```mermaid
-stateDiagram-v2
-    [*] --> CLOSED
-    CLOSED --> LISTEN: Server Passive Open
-    CLOSED --> SYN_SENT: Client Active Open (Send SYN)
-    LISTEN --> SYN_RCVD: Receive SYN (Send SYN+ACK)
-    SYN_SENT --> ESTABLISHED: Receive SYN+ACK (Send ACK)
-    SYN_RCVD --> ESTABLISHED: Receive ACK
-    
-    ESTABLISHED --> FIN_WAIT_1: Active Close (Send FIN)
-    ESTABLISHED --> CLOSE_WAIT: Passive Close (Receive FIN, Send ACK)
-    
-    FIN_WAIT_1 --> FIN_WAIT_2: Receive ACK
-    FIN_WAIT_1 --> CLOSING: Simultaneous Close (Receive FIN, Send ACK)
-    FIN_WAIT_2 --> TIME_WAIT: Receive FIN (Send ACK)
-    CLOSING --> TIME_WAIT: Receive ACK
-    
-    CLOSE_WAIT --> LAST_ACK: Application Closes (Send FIN)
-    LAST_ACK --> CLOSED: Receive ACK
-    
-    TIME_WAIT --> CLOSED: Timeout (2 * MSL)
-```
+![Figure 4.16: Complete TCP 11-State Finite State Machine (FSM)](figures/fig4_16_tcp_fsm.svg)
 
 ---
 
@@ -811,15 +568,7 @@ stateDiagram-v2
 ### The Byte-Oriented Sliding Window Protocol
 TCP flow control uses a byte-level sliding window driven by the receiver's available buffer:
 
-```mermaid
-flowchart LR
-    subgraph SendBuffer["Sender Transmission Window"]
-        B1["Bytes 1 - 2000<br/>Sent & ACKed<br/>(Cannot resend)"]
-        B2["Bytes 2001 - 3500<br/>Sent, Awaiting ACK<br/>(In-Flight)"]
-        B3["Bytes 3501 - 5000<br/>Allowed to Send Immediately<br/>(Within rwnd)"]
-        B4["Bytes 5001+<br/>Blocked from Sending<br/>(Outside Window)"]
-    end
-```
+![Figure 4.17: Byte-Oriented Sliding Window Buffer Management](figures/fig4_17_sliding_window_buffer.svg)
 
 The sender's transmission limit is governed by the relation:
 $$\text{Last Byte Sent} - \text{Last Byte ACKed} \le rwnd$$
@@ -827,18 +576,7 @@ $$\text{Last Byte Sent} - \text{Last Byte ACKed} \le rwnd$$
 ### Silly Window Syndrome (SWS)
 A catastrophic throughput collapse where TCP exchanges data in tiny fragments (e.g., 1 byte of payload inside a 40-byte TCP/IP header, yielding a dismal $2.4\%$ link efficiency). SWS can be triggered from either endpoint:
 
-```mermaid
-flowchart TD
-    SWS["Silly Window Syndrome (SWS)"]
-    SWS_S["Sender-Side SWS<br/>Application produces 1 byte at a time<br/>(e.g., keypresses in Telnet)"]
-    SWS_R["Receiver-Side SWS<br/>Application consumes 1 byte at a time<br/>(Receiver advertises rwnd = 1)"]
-    
-    SOL_N["Mitigation: Nagle's Algorithm (RFC 896)"]
-    SOL_C["Mitigation: Clark's Solution (RFC 813)"]
-
-    SWS_S ==> SOL_N
-    SWS_R ==> SOL_C
-```
+![Figure 4.18: Silly Window Syndrome and Mitigations (Nagle vs. Clark)](figures/fig4_18_silly_window_syndrome.svg)
 
 #### 1. Sender-Side SWS & Nagle's Algorithm (RFC 896)
 - **Problem**: Application writes data byte-by-byte. The sender naively dispatches each single byte in an individual segment.
@@ -859,13 +597,7 @@ $$\text{Advertised Space} \ge \min\left(\text{MSS}, \frac{\text{Total Receiver B
 
 TCP maintains a **Congestion Window ($cwnd$)** representing the maximum volume of unacknowledged data the intermediate network can handle without dropping packets.
 
-```mermaid
-xychart-beta
-    title "TCP Reno Congestion Window (cwnd) Evolution"
-    x-axis [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    y-axis "cwnd (in MSS)" 0 --> 36
-    line [1, 2, 4, 8, 16, 17, 18, 19, 20, 21, 22, 11, 12, 13, 14, 15]
-```
+![Figure 4.19: TCP Tahoe vs. Reno Congestion Window Dynamics (AIMD)](figures/fig4_19_tcp_congestion_curve.svg)
 
 ### The Four Core Phases
 
@@ -888,14 +620,7 @@ $$cwnd \gets cwnd + \frac{1}{cwnd}\text{ MSS} \quad (\text{per received ACK})$$
 
 #### 4. Fast Recovery: TCP Tahoe vs. TCP Reno
 
-```mermaid
-flowchart TD
-    subgraph LossEvent["Loss Event: 3 Duplicate ACKs Received"]
-        direction TB
-        TAHOE["TCP Tahoe (Aggressive Fallback)<br/>1. ssthresh = cwnd / 2<br/>2. cwnd = 1 MSS<br/>3. Re-enters SLOW START from scratch!"]
-        RENO["TCP Reno (Fast Recovery)<br/>1. ssthresh = cwnd / 2<br/>2. cwnd = ssthresh + 3 MSS<br/>3. Stays in CONGESTION AVOIDANCE (Linear)!"]
-    end
-```
+![Figure 4.20: Fast Recovery Mechanics: TCP Tahoe vs. TCP Reno](figures/fig4_20_fast_recovery_comparison.svg)
 
 - **Timeout Event**: If loss is so severe that no ACKs return and the RTO timer expires, both Tahoe and Reno set $ssthresh = cwnd / 2$, collapse $cwnd = 1\text{ MSS}$, and reset to Slow Start.
 
@@ -967,15 +692,7 @@ The dynamic retransmission timer updates from $180\text{ ms}$ to $200\text{ ms}$
 
 The **Stream Control Transmission Protocol (SCTP)** was developed by the IETF Signaling Transport (SIGTRAN) working group and standardized in **RFC 2960 (2000)** and refined in **RFC 4960 (2007)**.
 
-```mermaid
-flowchart TD
-    subgraph Drivers["Motivations Driving the Creation of SCTP"]
-        D1["Telephony Signaling (SS7 over IP): Required Zero Downtime & High Availability"]
-        D2["TCP Limitations: Vulnerable to SYN Flood, Strict Byte-Stream, HoL Blocking"]
-        D3["UDP Limitations: No Reliability, No Congestion Control, No Flow Control"]
-    end
-    Drivers ==> SCTP["SCTP: Unifies the Best Features of TCP & UDP with Next-Gen Capabilities"]
-```
+![Figure 4.21: Historical Drivers and Architectural Goals of SCTP](figures/fig4_21_sctp_drivers.svg)
 
 ### The Architectural Problem with TCP in Carrier Networks
 While TCP serves regular Internet applications well, its limitations became clear when telecommunications operators attempted to migrate mission-critical Public Switched Telephone Network (PSTN) SS7 signaling onto IP:
@@ -990,25 +707,7 @@ While TCP serves regular Internet applications well, its limitations became clea
 
 SCTP introduced two foundational concepts to transport layer design:
 
-```mermaid
-flowchart TD
-    subgraph MultiHoming["1. Multi-Homing: Redundant Physical Paths"]
-        direction LR
-        EP_A["Endpoint A<br/>IP1: 192.168.1.1<br/>IP2: 10.0.0.1"] <===>|"Primary Path"| EP_B["Endpoint B<br/>IP1: 198.51.100.1<br/>IP2: 203.0.113.1"]
-        EP_A -.->|"Alternate Backup Path (Heartbeat Checked)"| EP_B
-    end
-
-    subgraph MultiStreaming["2. Multi-Streaming: Independent Logical Channels"]
-        direction TB
-        ASOC["Single SCTP Association"]
-        S0["Stream 0: Audio Media (Independent Sequencing)"]
-        S1["Stream 1: Chat Data (Independent Sequencing)"]
-        S2["Stream 2: Video Control (Independent Sequencing)"]
-        ASOC --- S0
-        ASOC --- S1
-        ASOC --- S2
-    end
-```
+![Figure 4.22: SCTP Multi-Homing and Multi-Streaming Architecture](figures/fig4_22_sctp_multihoming.svg)
 
 ### 1. Multi-Homing (High Availability Architecture)
 An SCTP connection between two endpoints is termed an **Association**. Unlike TCP, an SCTP association can bind **multiple IP addresses** to each endpoint:
@@ -1116,22 +815,7 @@ Every chunk has a standardized 4-byte header:
 
 ### Association Establishment: Immunity to SYN Flood Attacks
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "SCTP Client"
-    participant Server as "SCTP Server"
-
-    Client->>Server: 1. INIT (Initiate Tag, List of IPs, Num In/Out Streams)
-    Note over Server: Server computes Cryptographic State Cookie.<br/>ALLOCATES ZERO MEMORY BUFFERS!
-    Server->>Client: 2. INIT_ACK (State Cookie, Init Tag, IPs)
-    Note over Client: Client stores State Cookie
-
-    Client->>Server: 3. COOKIE_ECHO (Returns Intact State Cookie)
-    Note over Server: Server verifies Cryptographic Signature.<br/>Validates Authenticity -> Allocates TCB Memory!
-    Server->>Client: 4. COOKIE_ACK
-    Note over Client,Server: Association Open: Data Chunks May Piggyback on Steps 3 & 4
-```
+![Figure 4.23: SCTP 4-Way Association Handshake with State Cookie Defense](figures/fig4_23_sctp_cookie_handshake.svg)
 
 1. **Step 1 (`INIT`)**: Client sends its initiation tag, advertised window, supported stream counts, and list of bound IPv4/IPv6 addresses.
 2. **Step 2 (`INIT_ACK`)**: The server **allocates zero state memory in RAM**. Instead, it packages all association parameters, a timestamp, and a cryptographic MAC (Message Authentication Code) generated using a private server secret into a **State Cookie**, returning it in the `INIT_ACK`.
@@ -1143,18 +827,7 @@ sequenceDiagram
 ### Association Teardown: 3-Way Graceful Shutdown
 Unlike TCP's half-close state (where one direction can remain open indefinitely), SCTP does not support half-open associations. Teardown shuts down both directions completely:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as "Endpoint A"
-    participant Server as "Endpoint B"
-
-    Client->>Server: SHUTDOWN (Flushes pending outbound data)
-    Note over Server: Server stops accepting new data, flushes buffer
-    Server->>Client: SHUTDOWN_ACK
-    Client->>Server: SHUTDOWN_COMPLETE
-    Note over Client,Server: Association Completely Closed
-```
+![Figure 4.24: SCTP 3-Way Graceful Association Shutdown](figures/fig4_24_sctp_shutdown.svg)
 
 ---
 
@@ -1200,32 +873,7 @@ sequenceDiagram
 
 TCP provides a rich set of transport services designed to ensure reliable, ordered, and efficient communication between network processes:
 
-```mermaid
-flowchart TD
-    SERVICES["Comprehensive Architecture of TCP Services"]
-    
-    S1["1. Process-to-Process Delivery (Sockets & Ports)"]
-    S2["2. Stream Delivery Service (Byte-Stream Model)"]
-    S3["3. Full-Duplex Communication Service"]
-    S4["4. Multiplexing & Demultiplexing Service"]
-    S5["5. Connection-Oriented Service (Stateful Sessions)"]
-    S6["6. Reliable Delivery & Error Control Services"]
-    S7["7. Flow Control Service (Receiver Protection)"]
-    S8["8. Congestion Control Service (Network Protection)"]
-    S9["9. Quality of Service, Flags & Out-of-Band Data"]
-    S10["10. Advanced Timer Management Services"]
-
-    SERVICES --> S1
-    SERVICES --> S2
-    SERVICES --> S3
-    SERVICES --> S4
-    SERVICES --> S5
-    SERVICES --> S6
-    SERVICES --> S7
-    SERVICES --> S8
-    SERVICES --> S9
-    SERVICES --> S10
-```
+![Figure 4.25: Comprehensive Architecture of TCP Services](figures/fig4_25_tcp_services_taxonomy.svg)
 
 ---
 
@@ -1243,23 +891,7 @@ Unlike message-oriented protocols that handle discrete application packets, TCP 
 - TCP buffers these bytes in a circular send buffer.
 - The transport layer decides when to segment this stream into Maximum Segment Size ($MSS$) units based on network conditions and buffer occupancy.
 
-```mermaid
-flowchart LR
-    subgraph SendSide["Sender Host"]
-        AppW["Application writes bytes:<br/>(B1, B2, B3 ... B9999)"] --> SBUF["Circular Send Buffer"]
-        SBUF -->|"Chunking into MSS segments"| PKT1["TCP Segment 1<br/>(Bytes 1-1460)"]
-        SBUF --> PKT2["TCP Segment 2<br/>(Bytes 1461-2920)"]
-    end
-
-    subgraph RecvSide["Receiver Host"]
-        PKT1 --> RBUF["Circular Receive Buffer"]
-        PKT2 --> RBUF
-        RBUF -->|"Continuous Byte Stream"| AppR["Application reads bytes:<br/>(B1, B2, B3 ... B9999)"]
-    end
-
-    PKT1 ==>|"Transit"| RBUF
-    PKT2 ==>|"Transit"| RBUF
-```
+![Figure 4.26: Circular Send and Receive Ring Buffer Stream Delivery Model](figures/fig4_26_circular_buffer_flow.svg)
 
 ---
 
@@ -1269,17 +901,7 @@ TCP connections are fundamentally **full-duplex**:
 - Data flows simultaneously in both directions over two independent, concurrent byte streams.
 - **Piggybacking**: When Host B needs to acknowledge data received from Host A, it does not need to send a standalone acknowledgment packet. Instead, it embeds the ACK sequence number inside the header of an outgoing data segment that Host B is already sending to Host A, reducing packet overhead on the network.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant A as "Host A"
-    participant B as "Host B"
-
-    A->>B: Data Segment (Seq = 1000, 500 Bytes Payload)
-    Note over B: Host B prepares return data of 300 bytes.<br/>PIGGYBACKS ACK inside data segment!
-    B->>A: Data + ACK Segment (Seq = 4000, Ack = 1500, 300 Bytes Payload)
-    Note over A: Host A accepts data & confirms ACK 1500
-```
+![Figure 4.27: Full-Duplex Bi-Directional Delivery & Piggybacked Acknowledgments](figures/fig4_27_full_duplex_piggybacking.svg)
 
 ---
 
@@ -1288,22 +910,7 @@ sequenceDiagram
 TCP demultiplexes incoming segments using a **4-tuple**:
 $$(\text{Source IP}, \text{Source Port}, \text{Destination IP}, \text{Destination Port})$$
 
-```mermaid
-flowchart TD
-    subgraph Clients["Concurrent Client Browsers"]
-        C1["Client 1: 10.0.0.5:51234"]
-        C2["Client 2: 10.0.0.9:58432"]
-    end
-
-    subgraph Server["Web Server: 203.0.113.80"]
-        LSTN["Listening Socket (:80)"]
-        T1["Worker Thread 1 Socket<br/>(10.0.0.5:51234, 203.0.113.80:80)"]
-        T2["Worker Thread 2 Socket<br/>(10.0.0.9:58432, 203.0.113.80:80)"]
-    end
-
-    C1 -->|"HTTP GET"| T1
-    C2 -->|"HTTP GET"| T2
-```
+![Figure 4.28: 4-Tuple Socket Demultiplexing for High-Concurrency Web Servers](figures/fig4_28_socket_demux_4tuple.svg)
 
 This 4-tuple addressing enables a single web server daemon listening on port 80 to establish concurrent, isolated connections with thousands of clients without cross-talk or route ambiguity.
 
@@ -1359,19 +966,7 @@ TCP provides control flags for application-level signaling:
 
 TCP maintains four interdependent timers to manage connection lifecycles and recovery:
 
-```mermaid
-flowchart TD
-    TIMERS["TCP Dynamic Timer Architecture"]
-    T1["1. Retransmission Timer (RTO)<br/>Governs ARQ retransmission of unacknowledged segments"]
-    T2["2. Persistence Timer<br/>Probes receiver when rwnd = 0 to prevent lost-update deadlocks"]
-    T3["3. Keepalive Timer<br/>Verifies client reachability during long idle periods (default 2h)"]
-    T4["4. TIME_WAIT Timer (2 * MSL)<br/>Holds closed port state (1-2 min) to flush lingering duplicate packets"]
-
-    TIMERS --> T1
-    TIMERS --> T2
-    TIMERS --> T3
-    TIMERS --> T4
-```
+![Figure 4.29: Dynamic TCP Timer Management Architecture](figures/fig4_29_tcp_timers.svg)
 
 1. **Retransmission Timer (RTO)**: Tracks in-flight segments and triggers retransmission when unacknowledged.
 2. **Persistence Timer**: Probes peer hosts when $rwnd = 0$ to prevent deadlocks caused by lost window-update ACKs.

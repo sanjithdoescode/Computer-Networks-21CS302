@@ -24,25 +24,7 @@ A **Computer Network** is an interconnected collection of autonomous computing d
 
 Nodes may encompass personal computers, servers, smartphones, network printers, switches, routers, and IoT sensors. Two devices are said to be networked if they can exchange information reliably.
 
-```mermaid
-flowchart LR
-    subgraph Network["Computer Network Environment"]
-        PC["Client Workstation"]
-        SRV[("Database Server")]
-        PRN["Network Printer"]
-        SW["Central Switch"]
-        
-        PC <-->|"High-Speed Link"| SW
-        SRV <-->|"Gigabit Link"| SW
-        PRN <-->|"Fast Ethernet"| SW
-    end
-    
-    RTR["Edge Router"]
-    INET(("Internet / Cloud"))
-    
-    SW <--> RTR
-    RTR <--> INET
-```
+![Figure 1.S1: Computer Network Environment Components](figures/fig1_s01_network_definition.svg)
 
 ### Essential Components of Data Communication
 Every network system relies on five core building blocks:
@@ -63,17 +45,7 @@ Every network system relies on five core building blocks:
 
 Networks are primarily classified according to their **geographical span**, structural scale, and administrative ownership:
 
-```mermaid
-flowchart TD
-    PAN["PAN (Personal Area Network)<br/>Coverage: ~1 - 10 meters"]
-    LAN["LAN (Local Area Network)<br/>Coverage: ~10 m - 1 km"]
-    MAN["MAN (Metropolitan Area Network)<br/>Coverage: ~5 km - 50 km"]
-    WAN["WAN (Wide Area Network)<br/>Coverage: Regional / National / Global"]
-    
-    PAN -->|"Integrated into"| LAN
-    LAN -->|"Interconnected via"| MAN
-    MAN -->|"Interconnected into"| WAN
-```
+![Figure 1.S2: Network Classification by Geographical Scale](figures/fig1_s02_network_types_scale.svg)
 
 ### 1. PAN (Personal Area Network)
 - **Geographic Scope**: Up to 10 meters (centered around an individual person).
@@ -111,40 +83,7 @@ flowchart TD
 
 Network architectures rely on **protocol layering** to achieve modularity, abstraction, and ease of troubleshooting. The two canonical models are the **ISO-OSI 7-Layer Model** and the **TCP/IP 5-Layer Model**.
 
-```mermaid
-flowchart LR
-    subgraph OSI["OSI 7-Layer Model"]
-        direction TB
-        O7["7. Application Layer"]
-        O6["6. Presentation Layer"]
-        O5["5. Session Layer"]
-        O4["4. Transport Layer"]
-        O3["3. Network Layer"]
-        O2["2. Data Link Layer"]
-        O1["1. Physical Layer"]
-        
-        O7 --- O6 --- O5 --- O4 --- O3 --- O2 --- O1
-    end
-
-    subgraph TCPIP["TCP/IP 5-Layer Architecture"]
-        direction TB
-        T5["5. Application Layer<br/>(HTTP, DNS, FTP, SMTP)"]
-        T4["4. Transport Layer<br/>(TCP, UDP)"]
-        T3["3. Network / Internet Layer<br/>(IP, ICMP, ARP)"]
-        T2["2. Data Link Layer<br/>(Ethernet, Wi-Fi, PPP)"]
-        T1["1. Physical Layer<br/>(Cables, Bits, Connectors)"]
-        
-        T5 --- T4 --- T3 --- T2 --- T1
-    end
-
-    O7 -.-> T5
-    O6 -.-> T5
-    O5 -.-> T5
-    O4 -.-> T4
-    O3 -.-> T3
-    O2 -.-> T2
-    O1 -.-> T1
-```
+![Figure 1.S3: OSI vs. TCP/IP Reference Layer Mapping](figures/fig1_s03_osi_tcpip_layers.svg)
 
 ### Detailed Breakdown of the OSI Reference Model
 
@@ -194,32 +133,7 @@ flowchart LR
 
 **Transmission Media** represents the physical conduit located beneath the Physical Layer that conveys energy (signals) from a transmitter to a receiver. They are categorized into **Guided Media** and **Unguided Media**.
 
-```mermaid
-flowchart TD
-    TM["Transmission Media"]
-    
-    GM["Guided Media<br/>(Wired / Bounded)"]
-    UM["Unguided Media<br/>(Wireless / Unbounded)"]
-    
-    TM --> GM
-    TM --> UM
-    
-    TP["Twisted Pair Cable<br/>(UTP / STP - Cat5e, Cat6)"]
-    COAX["Coaxial Cable<br/>(Baseband / Broadband - RG-59)"]
-    FIBER["Fiber-Optic Cable<br/>(Single-Mode / Multi-Mode)"]
-    
-    GM --> TP
-    GM --> COAX
-    GM --> FIBER
-    
-    RADIO["Radio Waves<br/>(3 kHz - 1 GHz, Omnidirectional)"]
-    MICRO["Microwaves<br/>(1 GHz - 300 GHz, Line-of-Sight)"]
-    INFRA["Infrared Waves<br/>(300 GHz - 400 THz, Short Range)"]
-    
-    UM --> RADIO
-    UM --> MICRO
-    UM --> INFRA
-```
+![Figure 1.S4: Classification of Physical Transmission Media](figures/fig1_s04_transmission_media_summary.svg)
 
 ### A. Guided Media (Wired / Bounded)
 Signals are physically constrained and directed within a physical boundary:
@@ -262,26 +176,7 @@ Electromagnetic waves propagate through air, water, or vacuum without physical c
 
 Both **Throughput** and **Jitter** are critical quality-of-service (QoS) metrics used to quantify the performance and stability of packet-switched communication systems.
 
-```mermaid
-flowchart TD
-    subgraph ThroughputMetric["Throughput Concept: Bandwidth vs Throughput"]
-        BW["Bandwidth: Pipe Capacity (100 Mbps)"]
-        TP["Actual Delivered Data: Throughput (65 Mbps)"]
-        LOSS["Losses: Protocol Headers, Congestion, Retransmissions (35 Mbps)"]
-        
-        BW --> TP
-        BW --> LOSS
-    end
-
-    subgraph JitterMetric["Jitter Concept: Packet Arrival Delay Variation"]
-        P1["Packet 1: Delay = 20ms"]
-        P2["Packet 2: Delay = 25ms (Diff = 5ms)"]
-        P3["Packet 3: Delay = 45ms (Diff = 20ms - High Jitter)"]
-        P4["Packet 4: Delay = 22ms (Diff = 23ms)"]
-        
-        P1 --> P2 --> P3 --> P4
-    end
-```
+![Figure 1.S5: Bandwidth, Throughput, and Jitter Metrics](figures/fig1_s05_throughput_vs_bandwidth.svg)
 
 ### 1. Throughput
 
@@ -321,22 +216,7 @@ $$\text{Jitter} = |D_{i+1} - D_i|$$
 
 The Transport Layer relies on two principal transport protocols: **TCP (Transmission Control Protocol)** and **UDP (User Datagram Protocol)**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    Note over Client,Server: TCP (Connection-Oriented, 3-Way Handshake)
-    Client->>Server: SYN (seq = x)
-    Server-->>Client: SYN-ACK (seq = y, ack = x + 1)
-    Client->>Server: ACK (ack = y + 1)
-    Note over Client,Server: Established Connection - Reliable Data Transfer
-    Client->>Server: Data Segment (seq = 1)
-    Server-->>Client: ACK (ack = 2)
-
-    Note over Client,Server: UDP (Connectionless, Best-Effort Delivery)
-    Client->>Server: Datagram 1 (No handshake)
-    Client->>Server: Datagram 2 (No ACK required)
-    Client->>Server: Datagram 3 (Fire-and-Forget)
-```
+![Figure 1.S6: Transport Dialogue Comparison: TCP vs. UDP](figures/fig1_s06_tcp_vs_udp_dialogue.svg)
 
 ### Detailed Comparison
 
@@ -359,24 +239,7 @@ sequenceDiagram
 
 Switching is the mechanism of forwarding data from an incoming link to an outgoing link to establish an end-to-end communication channel.
 
-```mermaid
-flowchart TD
-    subgraph CircuitSwitching["Circuit Switching (Dedicated Path)"]
-        direction LR
-        S1["Sender"] -->|"Dedicated Bandwidth"| SW1["Switch A"]
-        SW1 -->|"Reserved Channel"| SW2["Switch B"]
-        SW2 -->|"Dedicated Bandwidth"| R1["Receiver"]
-    end
-
-    subgraph PacketSwitching["Packet Switching (Dynamic Store-and-Forward)"]
-        direction LR
-        S2["Sender"] -->|"Packets 1, 2, 3"| PSW1["Router 1"]
-        PSW1 -->|"Packet 1 (Path A)"| PSW2["Router 2"]
-        PSW1 -->|"Packets 2, 3 (Path B)"| PSW3["Router 3"]
-        PSW2 --> R2["Receiver (Reassembles Packets)"]
-        PSW3 --> R2
-    end
-```
+![Figure 1.S7: Circuit Switching vs. Packet Switching](figures/fig1_s07_circuit_vs_packet_switching.svg)
 
 ### 1. Circuit Switching
 - **Mechanism**: A dedicated physical or virtual circuit is reserved across all intermediate switches along the path before transmission starts. The process comprises three phases: **Connection Setup $\to$ Data Transfer $\to$ Circuit Teardown**.
@@ -412,22 +275,7 @@ flowchart TD
 
 Switches and routers are the primary interconnecting devices operating at different layers of the OSI reference model.
 
-```mermaid
-flowchart TD
-    subgraph LAN1["Local Area Network (Subnet A)"]
-        PC1["Host A1"] --- SW1["Layer 2 Switch<br/>(MAC Table / Frames)"]
-        PC2["Host A2"] --- SW1
-    end
-
-    subgraph LAN2["Local Area Network (Subnet B)"]
-        PC3["Host B1"] --- SW2["Layer 2 Switch<br/>(MAC Table / Frames)"]
-        PC4["Host B2"] --- SW2
-    end
-
-    SW1 <-->|"Frame Delivery"| RTR["Layer 3 Router<br/>(Routing Table / IP Packets)"]
-    SW2 <-->|"Frame Delivery"| RTR
-    RTR <-->|"WAN / Internet"| CLOUD(("External WAN"))
-```
+![Figure 1.S8: Architectural Contrast: Layer 2 Switch vs. Layer 3 Router](figures/fig1_s08_switch_vs_router.svg)
 
 ### 1. Network Switch (Layer 2)
 - Operates primarily at the **Data Link Layer (Layer 2)**.
@@ -462,47 +310,7 @@ flowchart TD
 ### Definition
 **Network Topology** refers to the geometric arrangement and schematic relationship of links and nodes (devices) forming a computer network. It defines how devices are arranged physically (**Physical Topology**) and how data flows through the network (**Logical Topology**).
 
-```mermaid
-flowchart TD
-    subgraph Topologies["Major Network Topologies"]
-        direction TB
-        
-        subgraph Mesh["Mesh Topology"]
-            direction LR
-            M1((A)) --- M2((B))
-            M1 --- M3((C))
-            M1 --- M4((D))
-            M2 --- M3
-            M2 --- M4
-            M3 --- M4
-        end
-        
-        subgraph Star["Star Topology"]
-            direction TB
-            HUB["Central Switch / Hub"]
-            S1(["PC 1"]) --- HUB
-            S2(["PC 2"]) --- HUB
-            S3(["PC 3"]) --- HUB
-            S4(["PC 4"]) --- HUB
-        end
-        
-        subgraph Bus["Bus Topology"]
-            direction LR
-            T1["Terminator"] --- B1["Node 1"]
-            B1 --- B2["Node 2"]
-            B2 --- B3["Node 3"]
-            B3 --- T2["Terminator"]
-        end
-        
-        subgraph Ring["Ring Topology"]
-            direction TB
-            R1(["Node 1"]) --> R2(["Node 2"])
-            R2 --> R3(["Node 3"])
-            R3 --> R4(["Node 4"])
-            R4 --> R1
-        end
-    end
-```
+![Figure 1.S9: Physical Network Topologies Overview](figures/fig1_s09_topologies_overview.svg)
 
 ---
 
@@ -565,20 +373,7 @@ flowchart TD
 ### Definition
 **Data Communication** is the exchange of data (in the form of digital or analog signals) between two devices via some form of transmission medium (such as a wire cable, optical fiber, or wireless radio link). For data communication to occur, the communicating devices must be part of a communication system made up of a combination of hardware (physical equipment) and software (programs and protocols).
 
-```mermaid
-flowchart LR
-    subgraph Model["5 Core Components of Data Communication"]
-        direction TB
-        PROT1["Protocol (Rules)"]
-        PROT2["Protocol (Rules)"]
-    end
-    
-    SND["Sender<br/>(Workstation)"] -->|"Message (Data Payload)"| MED["Transmission Medium<br/>(Guided / Unguided Channel)"]
-    MED -->|"Message (Data Payload)"| RCV["Receiver<br/>(Server / Host)"]
-    
-    PROT1 -.->|"Governs"| SND
-    PROT2 -.->|"Governs"| RCV
-```
+![Figure 1.S10: Five Foundational Components of Data Communication](figures/fig1_s10_five_components_communication.svg)
 
 ### 1. Five Fundamental Components of Data Communication
 As defined in Behrouz Forouzan's *Data Communications and Networking*, a data communication system consists of 5 fundamental elements:
@@ -612,21 +407,7 @@ There are two primary types of line configuration:
 1. **Point-to-Point Connection**
 2. **Multipoint (or Multi-drop) Connection**
 
-```mermaid
-flowchart TD
-    subgraph P2P["1. Point-to-Point Configuration (Dedicated Link)"]
-        direction LR
-        STA1["Station A"] <-->|"Dedicated Capacity Channel"| STA2["Station B"]
-    end
-
-    subgraph MP["2. Multipoint Configuration (Shared Link)"]
-        direction LR
-        MAST["Mainframe / Primary Station"] --- BB["Common Shared Backbone Cable"]
-        BB -.- S1["Station 1"]
-        BB -.- S2["Station 2"]
-        BB -.- S3["Station 3"]
-    end
-```
+![Figure 1.S11: Point-to-Point vs. Multipoint Line Configurations](figures/fig1_s11_line_configuration.svg)
 
 ### 1. Point-to-Point Configuration
 - **Description**: Provides a **dedicated link** between two devices. The entire capacity of the channel is reserved exclusively for transmission between those two endpoints.
